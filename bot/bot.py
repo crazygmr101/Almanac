@@ -26,6 +26,7 @@ import aiohttp
 import discord
 import dotenv
 from discord.ext import tasks, commands
+from discord.ext.commands import MinimalHelpCommand
 
 from libs.openweathermap import OpenWeatherMapAPI
 
@@ -38,7 +39,7 @@ import bot
 class Almanac(commands.AutoShardedBot):
 
     def __init__(self, *args, **kwargs):
-        super(Almanac, self).__init__(*args, **kwargs)
+        super(Almanac, self).__init__(*args, help_command=MinimalHelpCommand(), command_prefix=";", **kwargs)
         dotenv.load_dotenv()
         self.shutting_down = False
         self.TRACE = 7
@@ -117,7 +118,7 @@ class Almanac(commands.AutoShardedBot):
 
         missing_brief = []
         for command in self.commands:
-            if not command.brief:
+            if not command.brief and command.name != "help":
                 missing_brief.append(command)
 
         if missing_brief:

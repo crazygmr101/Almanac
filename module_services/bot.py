@@ -18,8 +18,6 @@ from discord import Embed
 from discord.embeds import _EmptyEmbed  # noqa
 
 
-
-
 # noinspection PyMethodMayBeStatic
 class BotService:
     def error_embed(self, title: str, description: str = _EmptyEmbed):

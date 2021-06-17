@@ -17,7 +17,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 from bot import Almanac
 
-bot = Almanac(help_command=None, command_prefix=";")
+bot = Almanac()
 bot.load_modules()
 
 bot.run()

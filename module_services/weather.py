@@ -29,6 +29,14 @@ class WeatherService(BotService):
                                           f"{self.direction_for(conditions.wind.direction)}") \
             .set_thumbnail(url=self.icon_url_for(conditions.weather[0].icon)) \
             .set_footer(text="Powered by OpenWeatherMap")
+        if conditions.snow:
+            embed = embed.add_field(name="Snowfall", inline=True,
+                                    value=f"❄️️ **1 hour**: {round(conditions.snow.one_hour, 2)} in"
+                                          f"🌨️ **3 hour**: {round(conditions.snow.three_hour, 2)} in")
+        if conditions.rain:
+            embed = embed.add_field(name="Rainfall", inline=True,
+                                    value=f"💧 **1 hour**: {round(conditions.rain.one_hour, 1)} in"
+                                          f"🌧 **3 hour**: {round(conditions.rain.three_hour, 1)} in")
         return embed
 
     def icon_url_for(self, icon: str) -> str:
