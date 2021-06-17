@@ -1,3 +1,20 @@
+"""
+Copyright 2021 crazygmr101
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -41,6 +58,14 @@ class Almanac(commands.AutoShardedBot):
 
         self.add_listener(on_ready, "on_ready")
 
+    def load_modules(self) -> None:
+        modules = [
+            "calendar"
+        ]
+        for module in modules:
+            self.logger.info(f"cogs:Loading {module}")
+            self.load_extension(f"modules.{module}")
+
     @tasks.loop(minutes=20)
     async def status_loop(self):
         await self.change_presence(activity=discord.Game(f";help | {len(self.guilds)} servers"))
@@ -74,17 +99,17 @@ class Almanac(commands.AutoShardedBot):
             except aiohttp.ClientConnectionError as e:
                 self.logger.warning(f"bot:Connection {i + 1}/6 failed")
                 self.logger.warning(f"bot:  {e}")
-                self.logger.warning(f"bot: waiting {2 ** (i + 1)} seconds")
+                self.logger.warning(f"bot:Waiting {2 ** (i + 1)} seconds")
                 await asyncio.sleep(2 ** (i + 1))
-                self.logger.info("bot:attempting to reconnect")
+                self.logger.info("bot:Attempting to reconnect")
         else:
-            self.logger.critical("bot: failed after 6 attempts")
+            self.logger.critical("bot:Failed after 6 attempts")
             return
 
         for cog in self.cogs:
             cog = self.get_cog(cog)
             if not cog.description and cog.qualified_name:
-                self.logger.critical(f"bot:cog {cog.qualified_name} has no description")
+                self.logger.critical(f"cogs:Cog {cog.qualified_name} has no description")
                 return
 
         missing_brief = []
@@ -93,9 +118,9 @@ class Almanac(commands.AutoShardedBot):
                 missing_brief.append(command)
 
         if missing_brief:
-            self.logger.error("bot:the following commands are missing help text")
+            self.logger.error("cmds:The following commands are missing help text")
             for i in missing_brief:
-                self.logger.error(f"bot: - {i.cog.qualified_name}.{i.name}")
+                self.logger.error(f"cmds: - {i.cog.qualified_name}.{i.name}")
             return
 
         await self.connect(reconnect=reconnect)
