@@ -14,7 +14,31 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import json
 
-from .calendar import CalendarService
-from .weather import WeatherService
+from discord import Embed
+from discord.ext import commands
 
+from bot import Almanac, AlmanacContext
+from module_services import WeatherService
+
+
+class WeatherModule(commands.Cog, WeatherService):
+    @commands.command(
+        brief="Show the current conditions for a city"
+    )
+    async def weather(self, ctx: AlmanacContext, *, city: str):
+        await ctx.send(embed=await self.current_conditions(city))
+
+    def __init__(self, bot: Almanac):
+        super(WeatherModule, self).__init__()
+        self.bot = bot
+
+    @property
+    def description(self) -> str:
+        return "Weather commands"
+
+
+
+def setup(bot: Almanac):
+    bot.add_cog(WeatherModule(bot))

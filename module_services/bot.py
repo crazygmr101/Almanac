@@ -14,7 +14,16 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from discord import Embed
+from discord.embeds import _EmptyEmbed  # noqa
 
-from .calendar import CalendarService
-from .weather import WeatherService
 
+
+
+# noinspection PyMethodMayBeStatic
+class BotService:
+    def error_embed(self, title: str, description: str = _EmptyEmbed):
+        return Embed(title=title, description=description, color=0x880000)
+
+    def ok_embed(self, title: str, description: str = _EmptyEmbed):
+        return Embed(title=title, description=description, color=0x008800)

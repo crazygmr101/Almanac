@@ -27,6 +27,8 @@ import discord
 import dotenv
 from discord.ext import tasks, commands
 
+from libs.openweathermap import OpenWeatherMapAPI
+
 if TYPE_CHECKING:
     from bot import AlmanacContext
 
@@ -60,7 +62,8 @@ class Almanac(commands.AutoShardedBot):
 
     def load_modules(self) -> None:
         modules = [
-            "calendar"
+            "calendar",
+            "weather"
         ]
         for module in modules:
             self.logger.info(f"cogs:Loading {module}")

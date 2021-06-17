@@ -14,20 +14,16 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import re
+from calendar import TextCalendar
 from datetime import datetime
 
 from discord.ext import commands
 
-import module_services
 from bot import Almanac, AlmanacContext
-
-from calendar import TextCalendar
-
-from module_services.calendar import CalendarView
+from module_services.calendar import CalendarView, CalendarService
 
 
-class CalendarModule(commands.Cog, module_services.CalendarService):
+class CalendarModule(commands.Cog, CalendarService):
     def __init__(self, bot: Almanac):
         self.bot = bot
 
