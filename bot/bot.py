@@ -1,0 +1,101 @@
+from __future__ import annotations
+
+import asyncio
+import logging
+import os
+from typing import TYPE_CHECKING
+
+import aiohttp
+import discord
+import dotenv
+from discord.ext import tasks, commands
+
+if TYPE_CHECKING:
+    from bot import AlmanacContext
+
+import bot
+
+
+class Almanac(commands.AutoShardedBot):
+
+    def __init__(self, *args, **kwargs):
+        super(Almanac, self).__init__(*args, **kwargs)
+        dotenv.load_dotenv()
+        self.shutting_down = False
+        self.TRACE = 7
+        for logger in [
+            "bot",
+            "discord.client",
+            "discord.gateway",
+            "discord.http",
+            "discord.ext.commands.core"
+        ]:
+            logging.getLogger(logger).setLevel(logging.DEBUG if logger == "bot" else logging.INFO)
+            logging.getLogger(logger).addHandler(bot.LoggingHandler())
+        self.logger = logging.getLogger("bot")
+
+        async def on_ready():
+            self.logger.info(f"Almanac online!")
+            await self.change_presence(activity=discord.Game(f";help | {len(self.guilds)} servers"))
+            self.status_loop.start()
+
+        self.add_listener(on_ready, "on_ready")
+
+    @tasks.loop(minutes=20)
+    async def status_loop(self):
+        await self.change_presence(activity=discord.Game(f";help | {len(self.guilds)} servers"))
+
+    async def on_message(self, message: discord.Message):
+
+        if not message.guild:
+            return
+
+        ctx: bot.AlmanacContext = await self.get_context(message, cls=bot.AlmanacContext)
+        await self.invoke(ctx)
+
+    async def start(self, *args, **kwargs):  # noqa: C901
+        """|coro|
+        A shorthand coroutine for :meth:`login` + :meth:`connect`.
+        Raises
+        -------
+        TypeError
+            An unexpected keyword argument was received.
+        """
+        reconnect = kwargs.pop('reconnect', True)
+
+        if kwargs:
+            raise TypeError("unexpected keyword argument(s) %s" % list(kwargs.keys()))
+
+        for i in range(0, 6):
+            try:
+                self.logger.debug(f"bot:Connecting, try {i + 1}/6")
+                await self.login(os.getenv("TOKEN"))
+                break
+            except aiohttp.ClientConnectionError as e:
+                self.logger.warning(f"bot:Connection {i + 1}/6 failed")
+                self.logger.warning(f"bot:  {e}")
+                self.logger.warning(f"bot: waiting {2 ** (i + 1)} seconds")
+                await asyncio.sleep(2 ** (i + 1))
+                self.logger.info("bot:attempting to reconnect")
+        else:
+            self.logger.critical("bot: failed after 6 attempts")
+            return
+
+        for cog in self.cogs:
+            cog = self.get_cog(cog)
+            if not cog.description and cog.qualified_name:
+                self.logger.critical(f"bot:cog {cog.qualified_name} has no description")
+                return
+
+        missing_brief = []
+        for command in self.commands:
+            if not command.brief:
+                missing_brief.append(command)
+
+        if missing_brief:
+            self.logger.error("bot:the following commands are missing help text")
+            for i in missing_brief:
+                self.logger.error(f"bot: - {i.cog.qualified_name}.{i.name}")
+            return
+
+        await self.connect(reconnect=reconnect)
