@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+from libs.googlemaps import GoogleMapsAPI
 from libs.openweathermap import OpenWeatherMapAPI, CityNotFoundError
 from module_services.bot import BotService
 
@@ -8,11 +9,12 @@ from module_services.bot import BotService
 # noinspection PyMethodMayBeStatic
 class WeatherService(BotService):
     def __init__(self):
-        self.api = OpenWeatherMapAPI(os.getenv("OWM"))
+        self.owm_api = OpenWeatherMapAPI(os.getenv("OWM"))
+        self.gmaps_api = GoogleMapsAPI(os.getenv("GMAPS"))
 
     async def current_conditions(self, city: str):
         try:
-            conditions = await self.api.get_current_conditions(city)
+            conditions = await self.owm_api.get_current_conditions(city)
         except CityNotFoundError:
             if city.lower() == "mordor":
                 return self.error_embed("City not found", "One does not simply look up Mordor's weather.")

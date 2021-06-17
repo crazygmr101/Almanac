@@ -14,32 +14,5 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from __future__ import annotations
-
-import aiohttp
-from yarl import URL
-
-from libs.openweathermap.errors import CityNotFoundError
-from libs.openweathermap.models import CurrentConditionsResponse
-
-
-class OpenWeatherMapAPI:
-    def __init__(self, token):
-        self.token: str = token
-
-    async def get_current_conditions(self, city: str) -> CurrentConditionsResponse:
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(url=URL.build(
-                    scheme="https",
-                    host="api.openweathermap.org",
-                    path="/data/2.5/weather",
-                    query={
-                        "appid": self.token,
-                        "q": city,
-                        "units": "imperial"
-                    }
-            )) as resp:
-                r = await resp.json()
-                if r["cod"] != 200:
-                    raise CityNotFoundError
-                return CurrentConditionsResponse.from_json(await resp.read())
+from .models import *
+from .api import *

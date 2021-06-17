@@ -6,13 +6,6 @@ from dataclasses_json import dataclass_json, config
 
 @dataclass_json
 @dataclass
-class Coordinates:
-    lon: int
-    lat: int
-
-
-@dataclass_json
-@dataclass
 class Condition:
     id: int
     main: str
@@ -60,6 +53,13 @@ class SysData:
     country: str
     sunrise: int
     sunset: int
+
+
+@dataclass_json
+@dataclass
+class Coordinates:
+    lat: int
+    lon: int
 
 
 @dataclass_json
