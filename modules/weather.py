@@ -30,6 +30,26 @@ class WeatherModule(commands.Cog, WeatherService):
     async def weather(self, ctx: AlmanacContext, *, city: str):
         await ctx.send(embed=await self.current_conditions(city))
 
+    @commands.group(
+        brief="NWS lookups"
+    )
+    async def nws(self, ctx: commands.Context):
+        if not ctx.subcommand_passed:
+            await ctx.send(embed=self.error_embed(
+                title="Must pass a subcommand",
+                description="\n".join(
+                    f"`nws {cmd.name}` - {cmd.brief}"
+                    for cmd in self.nws.walk_commands()
+                    if isinstance(cmd, commands.Command)
+                )
+            ))
+
+    @nws.command(
+        brief="Lookup point data for a lat/long"
+    )
+    async def point(self, ctx: commands.Context, lat: int, long: int):
+        await ctx.send(embed=await self.point_data(lat, long))
+
     def __init__(self, bot: Almanac):
         super(WeatherModule, self).__init__()
         self.bot = bot

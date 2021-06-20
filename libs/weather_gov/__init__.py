@@ -14,28 +14,5 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import json
-
-import aiohttp
-from yarl import URL
-
-from libs.googlemaps import models
-
-
-class GoogleMapsAPI:
-    def __init__(self, token):
-        self.token = token
-
-    async def geocode(self, location: str) -> models.GeocodeResponse:
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(url=URL.build(
-                    host="maps.googleapis.com",
-                    scheme="https",
-                    path="/maps/api/geocode/json",
-                    query={
-                        "address": location,
-                        "key": self.token
-                    }
-            )) as resp:
-                r = await resp.json()
-                return models.GeocodeResponse.from_json(json.dumps(r))
+from .models import *
+from .api import *

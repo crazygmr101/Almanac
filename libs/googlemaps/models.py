@@ -30,6 +30,7 @@ class Coordinates:
     def lon(self) -> int:
         return self.lng
 
+
 @dataclass_json
 @dataclass
 class GoogleMapsGeometry:

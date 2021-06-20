@@ -50,9 +50,9 @@ class Precipitation:
 @dataclass_json
 @dataclass
 class SysData:
-    country: str
     sunrise: int
     sunset: int
+    country: Optional[str] = ""
 
 
 @dataclass_json
