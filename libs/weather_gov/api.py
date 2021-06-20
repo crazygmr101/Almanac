@@ -17,7 +17,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import json
 
 import aiohttp
-from yarl import URL
+from expiringdict import ExpiringDict
 
 from libs.weather_gov.models import WeatherGovPoint
 
@@ -25,11 +25,18 @@ from libs.weather_gov.models import WeatherGovPoint
 # noinspection PyMethodMayBeStatic
 class WeatherGovAPI:
     def __init__(self):
-        pass
+        self._cache = ExpiringDict(max_len=1000, max_age_seconds=60*60*12)  # expire in 12h
 
-    async def lookup_point(self, latitude: int, longitude: int) -> WeatherGovPoint:
+    async def lookup_point(self, latitude: float, longitude: float) -> WeatherGovPoint:
+        latitude = round(latitude, 3)
+        longitude = round(longitude, 3)
+        res = self._cache.get((latitude, longitude), None)
+        if res is not None:
+            return res
         async with aiohttp.ClientSession() as sess:
             async with sess.get(f"https://api.weather.gov/points/{latitude},{longitude}") as resp:
                 resp.raise_for_status()  # TODO intelligent errors here
                 content = json.dumps(await resp.json())
-                return WeatherGovPoint.from_json(content)
+                res = WeatherGovPoint.from_json(content)
+                self._cache[(latitude, longitude)] = res
+                return res

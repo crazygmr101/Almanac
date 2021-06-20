@@ -17,16 +17,21 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import json
 
 import aiohttp
+from expiringdict import ExpiringDict
 from yarl import URL
 
-from libs.googlemaps import models
+from libs.googlemaps.models import GeocodeResponse
 
 
 class GoogleMapsAPI:
     def __init__(self, token):
         self.token = token
+        self._cache = ExpiringDict(10000, 60 * 60 * 12)  # 12h
 
-    async def geocode(self, location: str) -> models.GeocodeResponse:
+    async def geocode(self, location: str) -> GeocodeResponse:
+        res = self._cache.get(location, None)
+        if res is not None:
+            return res
         async with aiohttp.ClientSession() as sess:
             async with sess.get(url=URL.build(
                     host="maps.googleapis.com",
@@ -38,4 +43,6 @@ class GoogleMapsAPI:
                     }
             )) as resp:
                 r = await resp.json()
-                return models.GeocodeResponse.from_json(json.dumps(r))
+                res = GeocodeResponse.from_json(json.dumps(r))
+                self._cache[location] = res
+                return res

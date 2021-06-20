@@ -19,8 +19,11 @@ class WeatherService(BotService, GeocodingService):
         self.weather_gov_api = WeatherGovAPI()
 
     async def current_conditions(self, city: str) -> discord.Embed:
-        # geocode
         lat, lon = await self.parse_location(city)
+        try:
+            data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
+        except aiohttp.ClientResponseError as e:
+            return self.error_embed(title="Lookup error", description=e.message)
         conditions = await self.owm_api.get_current_conditions(lat, lon)
         sunrise = datetime.utcfromtimestamp(conditions.sys.sunrise + conditions.timezone).strftime("%-I:%M %p")
         sunset = datetime.utcfromtimestamp(conditions.sys.sunset + conditions.timezone).strftime("%-I:%M %p")
@@ -42,6 +45,9 @@ class WeatherService(BotService, GeocodingService):
             embed = embed.add_field(name="Rainfall", inline=True,
                                     value=f"💧 **1 hour**: {round(conditions.rain.one_hour, 1)} in"
                                           f"🌧 **3 hour**: {round(conditions.rain.three_hour, 1)} in")
+
+        if data.radar_station:
+            embed.set_image(url=f"https://radar.weather.gov/ridge/lite/{data.radar_station}_loop.gif")
         return embed
 
     def icon_url_for(self, icon: str) -> str:
@@ -68,6 +74,4 @@ class WeatherService(BotService, GeocodingService):
         embed = self.ok_embed(title=f"Point Lookup {data.grid_x},{data.grid_y}",
                               description=f":satellite: **Radar**: {data.radar_station}\n"
                                           f":pushpin: **Location**: {relative_location}")
-        if data.radar_station:
-            embed.set_image(url=f"https://radar.weather.gov/ridge/lite/{data.radar_station}_loop.gif")
         return embed

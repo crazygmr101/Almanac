@@ -16,9 +16,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from __future__ import annotations
 
-from typing import overload
+from typing import overload, Tuple
 
 import aiohttp
+from expiringdict import ExpiringDict
 from yarl import URL
 
 from libs.openweathermap.errors import CityNotFoundError
@@ -28,8 +29,14 @@ from libs.openweathermap.models import CurrentConditionsResponse
 class OpenWeatherMapAPI:
     def __init__(self, token):
         self.token: str = token
+        self._cache = ExpiringDict(max_len=1000, max_age_seconds=15*60)  # 15 mins
 
-    async def get_current_conditions(self, lat: float, lon: float) -> CurrentConditionsResponse:
+    async def get_current_conditions(self, latitude: float, longitude: float) -> CurrentConditionsResponse:
+        latitude = round(latitude, 3)
+        longitude = round(longitude, 3)
+        res = self._cache.get((latitude, longitude), None)
+        if res is not None:
+            return res
         async with aiohttp.ClientSession() as sess:
             async with sess.get(url=URL.build(
                     scheme="https",
@@ -37,12 +44,14 @@ class OpenWeatherMapAPI:
                     path="/data/2.5/weather",
                     query={
                         "appid": self.token,
-                        "lat": lat,
-                        "lon": lon,
+                        "lat": latitude,
+                        "lon": longitude,
                         "units": "imperial"
                     }
             )) as resp:
                 r = await resp.json()
                 if r["cod"] != 200:
                     raise CityNotFoundError
-                return CurrentConditionsResponse.from_json(await resp.read())
+                res = CurrentConditionsResponse.from_json(await resp.read())
+                self._cache[(latitude, longitude)] = res
+                return res
