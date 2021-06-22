@@ -18,3 +18,5 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from .bot import *
 from .context import *
 from .logging import *
+from .decorators import *
+from .command import *

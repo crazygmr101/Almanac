@@ -19,7 +19,7 @@ from datetime import datetime
 
 from discord.ext import commands
 
-from bot import Almanac, AlmanacContext
+from bot import Almanac, AlmanacContext, AlmanacCommand
 from module_services.calendar import CalendarView, CalendarService
 
 
@@ -32,7 +32,12 @@ class CalendarModule(commands.Cog, CalendarService):
         return "Your virtual calendar"
 
     @commands.command(
-        brief="Interactive calendar"
+        cls=AlmanacCommand,
+        brief="Interactive calendar",
+        usage="`;calendar` - show the current month\n"
+              "`;calendar 2020` - start at 2020, with the same month as now\n"
+              "`;calendar mar 2020` - start on march 2020",
+        arg_list={"time": [True, str, "Month/year to start the calendar at"]}
     )
     async def calendar(self, ctx: AlmanacContext, *, time: str = None):
         if not time:

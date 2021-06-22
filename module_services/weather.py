@@ -1,10 +1,12 @@
 import os
 from datetime import datetime
+from io import BytesIO
 from typing import Union
 
 import aiohttp
 import discord
 
+from libs.maptiler import MapTilerAPI
 from libs.openweathermap import OpenWeatherMapAPI
 from libs.weather_gov import WeatherGovAPI
 from module_services.bot import BotService
@@ -17,6 +19,7 @@ class WeatherService(BotService, GeocodingService):
         super(WeatherService, self).__init__()
         self.owm_api = OpenWeatherMapAPI(os.getenv("OWM"))
         self.weather_gov_api = WeatherGovAPI()
+        self.map_api = MapTilerAPI(os.getenv("MAPTILER"))
 
     async def current_conditions(self, city: str) -> discord.Embed:
         lat, lon = await self.parse_location(city)
@@ -45,9 +48,22 @@ class WeatherService(BotService, GeocodingService):
             embed = embed.add_field(name="Rainfall", inline=True,
                                     value=f"💧 **1 hour**: {round(conditions.rain.one_hour, 1)} in"
                                           f"🌧 **3 hour**: {round(conditions.rain.three_hour, 1)} in")
+        return embed
 
+    async def radar_map(self, city: str) -> discord.Embed:
+        lat, lon = await self.parse_location(city)
+        try:
+            data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
+        except aiohttp.ClientResponseError as e:
+            return self.error_embed(title="Lookup error", description=e.message)
+        conditions = await self.owm_api.get_current_conditions(lat, lon)
         if data.radar_station:
+            embed = self.ok_embed(title=f"**Radar for {conditions.city_name}, {conditions.sys.country}**",
+                                  description=f"{round(lat, 4)}° {round(lon, 4)}°")
             embed.set_image(url=f"https://radar.weather.gov/ridge/lite/{data.radar_station}_loop.gif")
+        else:
+            embed = self.error_embed(title="No radar data available",
+                                     description=f"No radar data was available for the requested location")
         return embed
 
     def icon_url_for(self, icon: str) -> str:
@@ -59,7 +75,7 @@ class WeatherService(BotService, GeocodingService):
         ix = round(deg / (360. / len(dirs)))
         return dirs[ix % len(dirs)]
 
-    async def point_data(self, lat: int, lon: int) -> discord.Embed:
+    async def point_data(self, lat: float, lon: float) -> discord.Embed:
         try:
             data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
         except aiohttp.ClientResponseError as e:
@@ -75,3 +91,14 @@ class WeatherService(BotService, GeocodingService):
                               description=f":satellite: **Radar**: {data.radar_station}\n"
                                           f":pushpin: **Location**: {relative_location}")
         return embed
+
+    async def radar_file(self, city: str, zoom: int, layer: str) -> discord.File:
+        lat, lon = await self.parse_location(city)
+        x, y = self.owm_api.get_tile(lat, lon, zoom)
+        buf = BytesIO()
+        layer_img = await self.owm_api.radar_image(lat, lon, zoom, layer)
+        osm_img = await self.map_api.get_map_tile(x, y, zoom)
+        osm_img.alpha_composite(layer_img)
+        osm_img.save(buf, format="png")
+        buf.seek(0)
+        return discord.File(buf, "radar.png")

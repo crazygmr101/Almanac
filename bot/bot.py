@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Tuple
 
 import aiohttp
 import discord
@@ -39,7 +39,7 @@ import bot
 class Almanac(commands.AutoShardedBot):
 
     def __init__(self, *args, **kwargs):
-        super(Almanac, self).__init__(*args, help_command=MinimalHelpCommand(), command_prefix=";", **kwargs)
+        super(Almanac, self).__init__(*args, help_command=None, command_prefix=";", **kwargs)
         dotenv.load_dotenv()
         self.shutting_down = False
         self.TRACE = 7
@@ -64,7 +64,8 @@ class Almanac(commands.AutoShardedBot):
     def load_modules(self) -> None:
         modules = [
             "calendar",
-            "weather"
+            "weather",
+            "help"
         ]
         for module in modules:
             self.logger.info(f"cogs:Loading {module}")
