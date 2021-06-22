@@ -86,10 +86,11 @@ class WeatherModule(commands.Cog, WeatherService):
         cls=AlmanacCommand,
         brief="Look up a weather map for a city",
         usage="`;map new york city, ny` - Look up a clouds map at zoom level 8\n"
-              "`;map 7 new york city` - Look up a clouds map at zoom level 7",
+              "`;map 7 new york city` - Look up a clouds map at zoom level 7\n"
+              "`;map precip new york city` - Look up a precipitation map at default zoom",
         arg_list={
-            "zoom": [True, int, "Zoom level from 1 to 16"],
-            "layer_type": [True, MapLayerType, "Map type: " + ", ".join(MapLayerType.TYPES)],
+            "zoom": [True, int, "Zoom level from 1 to 16 - defaults to 8"],
+            "layer_type": [True, MapLayerType, "Map type: " + ", ".join(MapLayerType.TYPES) + "defaults to clouds"],
             "location": [False, str, "Location to look up"]
         }
     )
