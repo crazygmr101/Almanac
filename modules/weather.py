@@ -29,10 +29,6 @@ class WeatherModule(commands.Cog, WeatherService):
         super(WeatherModule, self).__init__()
         self.bot = bot
 
-    @property
-    def description(self) -> str:
-        return "Weather commands"
-
     @commands.group(
         brief="Weather lookups"
     )

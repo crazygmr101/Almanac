@@ -25,10 +25,6 @@ class HelpModule(commands.Cog, HelpService):
         super(HelpModule, self).__init__()
         self.bot = bot
 
-    @property
-    def description(self) -> str:
-        return "Help commands"
-
     @commands.group()
     async def help(self, ctx: AlmanacContext):
         if ctx.invoked_subcommand:

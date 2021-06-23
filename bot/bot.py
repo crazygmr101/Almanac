@@ -111,12 +111,6 @@ class Almanac(commands.AutoShardedBot):
             self.logger.critical("bot:Failed after 6 attempts")
             return
 
-        for cog in self.cogs:
-            cog = self.get_cog(cog)
-            if not cog.description and cog.qualified_name:
-                self.logger.critical(f"cogs:Cog {cog.qualified_name} has no description")
-                return
-
         missing_brief = []
         for command in self.commands:
             if not command.brief and command.name != "help":
