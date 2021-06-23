@@ -14,6 +14,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from datetime import timedelta
 from io import BytesIO
 from typing import Tuple, Dict
 
@@ -21,39 +22,40 @@ import aiohttp
 from PIL import Image
 from yarl import URL
 
+from libs.disk_cache import DiskCache
 from libs.helpers import get_tiles, assemble_mosaic
 
 
 class MapTilerAPI:
     def __init__(self, token: str):
         self.token = token
-        self.cache: Dict[Tuple[int, int, int], Image.Image] = {}
+        self.disk_cache = DiskCache("/tmp/almanac/map-tiler/", timedelta(days=7))
 
     async def _map_tile(self, x: int, y: int, zoom: int) -> Image.Image:
-        # https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg
-        try:
-            return self.cache[(x, y, zoom)]
-        except KeyError:
-            pass
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(url=URL.build(
-                    scheme="https",
-                    host="api.maptiler.com",
-                    path=f"/maps/basic/256/{zoom}/{x}/{y}.png",
-                    query={
-                        "key": self.token
-                    }
-            ), headers={
-                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
-                # noqa e501
-            }) as resp:
-                buf = BytesIO()
-                buf.write(await resp.read())
-        buf.seek(0)
+        resp = self.disk_cache.get(f"/{zoom}/{x}/{y}.png")
+        buf = BytesIO()
+        if resp is not None:
+            buf.write(resp)
+            buf.seek(0)
+        else:
+            async with aiohttp.ClientSession() as sess:
+                async with sess.get(url=URL.build(
+                        scheme="https",
+                        host="api.maptiler.com",
+                        path=f"/maps/basic/256/{zoom}/{x}/{y}.png",
+                        query={
+                            "key": self.token
+                        }
+                ), headers={
+                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36" # noqa e501
+                }) as resp:
+                    buf.write(await resp.read())
+            buf.seek(0)
+            self.disk_cache.put(f"/{zoom}/{x}/{y}.png", buf.read())
+            buf.seek(0)
         img: Image.Image = Image.open(buf)
         img.load()
         img = img.convert("RGBA")
-        self.cache[(x, y, zoom)] = img
         return img
 
     async def get_map_image(self, lat: float, lon: float, zoom: int) -> Image.Image:
