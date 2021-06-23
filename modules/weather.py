@@ -97,7 +97,7 @@ class WeatherModule(commands.Cog, WeatherService):
     async def map(self, ctx: AlmanacContext, zoom: Optional[int], layer_type: Optional[MapLayerType], *, location: str):
         layer_type = layer_type.layer_type if layer_type else "clouds"
         zoom = zoom or 8
-        await ctx.send(file=await self.radar_file(location, zoom, layer_type))
+        await ctx.send(file=await self.weather_map(location, zoom, layer_type))
 
     @weather.command(
         cls=AlmanacCommand,

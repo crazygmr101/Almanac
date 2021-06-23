@@ -16,15 +16,16 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from __future__ import annotations
 
-import math
 from io import BytesIO
-from typing import Tuple
+from pprint import pprint
+from typing import Tuple, Dict
 
 import aiohttp
 from PIL import Image
 from expiringdict import ExpiringDict
 from yarl import URL
 
+from libs.helpers import get_tiles, assemble_mosaic
 from libs.openweathermap.errors import CityNotFoundError
 from libs.openweathermap.models import CurrentConditionsResponse
 
@@ -33,6 +34,7 @@ class OpenWeatherMapAPI:
     def __init__(self, token):
         self.token: str = token
         self._cache = ExpiringDict(max_len=1000, max_age_seconds=15 * 60)  # 15 mins
+        self._tile_cache: Dict[Tuple[int, int, int], Image.Image] = {}
 
     async def get_current_conditions(self, latitude: float, longitude: float) -> CurrentConditionsResponse:
         latitude = round(latitude, 3)
@@ -59,14 +61,11 @@ class OpenWeatherMapAPI:
                 self._cache[(latitude, longitude)] = res
                 return res
 
-    def get_tile(self, lat: float, lon: float, zoom: int) -> Tuple[int, int]:
-        n = 2.0 ** zoom
-        x = int((lon + 180.0) / 360.0 * n)
-        y = int((1.0 - math.log(math.tan(math.radians(lat)) + (1 / math.cos(math.radians(lat)))) / math.pi) / 2.0 * n)
-        return x, y
-
-    async def radar_image(self, latitude: float, longitude: float, zoom: int, layer: str) -> Image.Image:
-        x, y = self.get_tile(latitude, longitude, zoom)
+    async def _radar_tile(self, x: int, y: int, zoom: int, layer: str) -> Image.Image:
+        try:
+            return self._tile_cache[(x, y, zoom)]
+        except KeyError:
+            pass
         async with aiohttp.ClientSession() as sess:
             async with sess.get(url=URL.build(
                     scheme="https",
@@ -81,4 +80,18 @@ class OpenWeatherMapAPI:
         buf.seek(0)
         img: Image.Image = Image.open(buf)
         img.load()
+        self._tile_cache[(x, y, zoom)] = img
         return img
+
+    async def radar_image(self, latitude: float, longitude: float, zoom: int, layer: str) -> Image.Image:
+        tiles, location = get_tiles(latitude, longitude, zoom)
+        images = [
+            await self._radar_tile(tile[0], tile[1], zoom, layer)
+            for tile in [
+                (tiles[0], tiles[1]),
+                (tiles[0], tiles[3]),
+                (tiles[2], tiles[1]),
+                (tiles[2], tiles[3])
+            ]
+        ]
+        return assemble_mosaic(images, location)

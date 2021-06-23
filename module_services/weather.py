@@ -92,12 +92,11 @@ class WeatherService(BotService, GeocodingService):
                                           f":pushpin: **Location**: {relative_location}")
         return embed
 
-    async def radar_file(self, city: str, zoom: int, layer: str) -> discord.File:
+    async def weather_map(self, city: str, zoom: int, layer: str) -> discord.File:
         lat, lon = await self.parse_location(city)
-        x, y = self.owm_api.get_tile(lat, lon, zoom)
         buf = BytesIO()
         layer_img = await self.owm_api.radar_image(lat, lon, zoom, layer)
-        osm_img = await self.map_api.get_map_tile(x, y, zoom)
+        osm_img = await self.map_api.get_map_image(lat, lon, zoom)
         osm_img.alpha_composite(layer_img)
         osm_img.save(buf, format="png")
         buf.seek(0)

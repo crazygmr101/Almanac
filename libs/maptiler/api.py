@@ -15,28 +15,37 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from io import BytesIO
+from typing import Tuple, Dict
 
 import aiohttp
 from PIL import Image
 from yarl import URL
 
+from libs.helpers import get_tiles, assemble_mosaic
+
 
 class MapTilerAPI:
     def __init__(self, token: str):
         self.token = token
+        self.cache: Dict[Tuple[int, int, int], Image.Image] = {}
 
-    async def get_map_tile(self, x: int, y: int, zoom: int) -> Image.Image:
-        # hhttps://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg
+    async def _map_tile(self, x: int, y: int, zoom: int) -> Image.Image:
+        # https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg
+        try:
+            return self.cache[(x, y, zoom)]
+        except KeyError:
+            pass
         async with aiohttp.ClientSession() as sess:
             async with sess.get(url=URL.build(
                     scheme="https",
                     host="api.maptiler.com",
-                    path=f"/tiles/satellite/{zoom}/{x}/{y}.jpg",
+                    path=f"/maps/basic/256/{zoom}/{x}/{y}.png",
                     query={
                         "key": self.token
                     }
             ), headers={
-                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"  # noqa e501
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+                # noqa e501
             }) as resp:
                 buf = BytesIO()
                 buf.write(await resp.read())
@@ -44,4 +53,18 @@ class MapTilerAPI:
         img: Image.Image = Image.open(buf)
         img.load()
         img = img.convert("RGBA")
+        self.cache[(x, y, zoom)] = img
         return img
+
+    async def get_map_image(self, lat: float, lon: float, zoom: int) -> Image.Image:
+        tiles, location = get_tiles(lat, lon, zoom)
+        images = [
+            await self._map_tile(tile[0], tile[1], zoom)
+            for tile in [
+                (tiles[0], tiles[1]),
+                (tiles[0], tiles[3]),
+                (tiles[2], tiles[1]),
+                (tiles[2], tiles[3])
+            ]
+        ]
+        return assemble_mosaic(images, location)
