@@ -56,6 +56,8 @@ class WeatherServiceImpl(BotService, GeocodingService):
             data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
         except aiohttp.ClientResponseError as e:
             return self.error_embed(title="Lookup error", description=e.message)
+        except IndexError:
+            return self.error_embed(title="Lookup error", description="Not found")
         conditions = await self.owm_api.get_current_conditions(lat, lon)
         if data.radar_station:
             embed = self.ok_embed(title=f"**Radar for {conditions.city_name}, {conditions.sys.country}**",
