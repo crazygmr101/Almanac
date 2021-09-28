@@ -14,30 +14,4 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import logging
-import os
-from pathlib import Path
-
-import dotenv
-
-# from bot import LoggingHandler
-from bot.impl import WeatherServiceImpl
-
-logging.basicConfig(level=logging.INFO)
-# logging.setLoggerClass(LoggingHandler)
-
-import hikari  # noqa E402
-import tanjun  # noqa E402
-from bot.proto import WeatherServiceProto
-
-dotenv.load_dotenv()
-
-bot = hikari.GatewayBot(token=os.getenv("TOKEN"))
-client = (
-    tanjun.Client
-        .from_gateway_bot(bot, set_global_commands=os.getenv("GUILD") or False)  # noqa E131
-        .add_type_dependency(WeatherServiceProto, tanjun.cache_callback(lambda: WeatherServiceImpl()))
-        .load_modules(*Path("./modules").glob("**/*.py"))
-)
-
-bot.run()
+from .weather import WeatherServiceProto

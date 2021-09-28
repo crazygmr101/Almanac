@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Union
 
 import aiohttp
-import discord
+import hikari
 
 from libs.maptiler import MapTilerAPI
 from libs.openweathermap import OpenWeatherMapAPI
@@ -14,14 +14,14 @@ from module_services.geocoding import GeocodingService
 
 
 # noinspection PyMethodMayBeStatic
-class WeatherService(BotService, GeocodingService):
+class WeatherServiceImpl(BotService, GeocodingService):
     def __init__(self):
-        super(WeatherService, self).__init__()
+        super(WeatherServiceImpl, self).__init__()
         self.owm_api = OpenWeatherMapAPI(os.getenv("OWM"))
         self.weather_gov_api = WeatherGovAPI()
         self.map_api = MapTilerAPI(os.getenv("MAPTILER"))
 
-    async def current_conditions(self, city: str) -> discord.Embed:
+    async def current_conditions(self, city: str) -> hikari.Embed:
         lat, lon = await self.parse_location(city)
         try:
             data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
@@ -38,7 +38,7 @@ class WeatherService(BotService, GeocodingService):
                                           f"🌇 **Sunset**: {sunset}\n"
                                           f"🌬️ **{int(conditions.wind.speed)}** MPH from "
                                           f"{self.direction_for(conditions.wind.direction)}") \
-            .set_thumbnail(url=self.icon_url_for(conditions.weather[0].icon)) \
+            .set_thumbnail(self.icon_url_for(conditions.weather[0].icon)) \
             .set_footer(text=f"Powered by OpenWeatherMap | {round(lat, 4)} {round(lon, 4)}")
         if conditions.snow:
             embed = embed.add_field(name="Snowfall", inline=True,
@@ -50,7 +50,7 @@ class WeatherService(BotService, GeocodingService):
                                           f"🌧 **3 hour**: {round(conditions.rain.three_hour, 1)} in")
         return embed
 
-    async def radar_map(self, city: str) -> discord.Embed:
+    async def radar_map(self, city: str) -> hikari.Embed:
         lat, lon = await self.parse_location(city)
         try:
             data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
@@ -60,7 +60,7 @@ class WeatherService(BotService, GeocodingService):
         if data.radar_station:
             embed = self.ok_embed(title=f"**Radar for {conditions.city_name}, {conditions.sys.country}**",
                                   description=f"{round(lat, 4)}° {round(lon, 4)}°")
-            embed.set_image(url=f"https://radar.weather.gov/ridge/lite/{data.radar_station}_loop.gif")
+            embed.set_image(f"https://radar.weather.gov/ridge/lite/{data.radar_station}_loop.gif")
         else:
             embed = self.error_embed(title="No radar data available",
                                      description=f"No radar data was available for the requested location")
@@ -75,7 +75,7 @@ class WeatherService(BotService, GeocodingService):
         ix = round(deg / (360. / len(dirs)))
         return dirs[ix % len(dirs)]
 
-    async def point_data(self, lat: float, lon: float) -> discord.Embed:
+    async def point_data(self, lat: float, lon: float) -> hikari.Embed:
         try:
             data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
         except aiohttp.ClientResponseError as e:
@@ -92,7 +92,7 @@ class WeatherService(BotService, GeocodingService):
                                           f":pushpin: **Location**: {relative_location}")
         return embed
 
-    async def weather_map(self, city: str, zoom: int, layer: str) -> discord.File:
+    async def raw_weather_map(self, city: str, zoom: int, layer: str) -> BytesIO:
         lat, lon = await self.parse_location(city)
         buf = BytesIO()
         layer_img = await self.owm_api.radar_image(lat, lon, zoom, layer)
@@ -100,4 +100,8 @@ class WeatherService(BotService, GeocodingService):
         osm_img.alpha_composite(layer_img)
         osm_img.save(buf, format="png")
         buf.seek(0)
-        return discord.File(buf, "radar.png")
+        return buf
+
+    async def weather_map(self, city: str, zoom: int, layer: str) -> hikari.Embed:
+        return hikari.Embed(title=f"{layer.title()} Map for {city}") \
+            .set_image(await self.raw_weather_map(city, zoom, layer))
