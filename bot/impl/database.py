@@ -17,12 +17,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import logging
 import os
 import typing
-from dataclasses import dataclass, Field, fields
 
 import mysql.connector
 
-from bot.proto import DatabaseProto
-from bot.proto.database import InvalidSetting, UserSettings
+from bot.proto.database import UserSettings
 from module_services.bot import BotService
 
 
@@ -33,6 +31,7 @@ def connect_to_database(password: str, url: str, user: str, database: str) -> my
         password=password,
         database=database
     )
+
 
 class DatabaseImpl(BotService):
     def __init__(self, connection: mysql.connector.MySQLConnection):
@@ -49,27 +48,21 @@ class DatabaseImpl(BotService):
         return cls(conn)
 
     def set_setting(self, user: int, setting: str, value: typing.Any):
-        if setting not in DatabaseProto.VALID_SETTINGS:
-            raise InvalidSetting
-        if not DatabaseProto.VALID_SETTINGS[setting][1](value):
-            raise ValueError(DatabaseProto.VALID_SETTINGS[setting][2])
         cursor = self._conn.cursor()
         cursor.execute(
             f"""
-            insert into settings (id, {DatabaseProto.VALID_SETTINGS[setting][0]}) values ({user}, "{value}")
-            on duplicate key update {DatabaseProto.VALID_SETTINGS[setting][0]}="{value}"
+            insert into settings (id, {setting}) values ({user}, "{value}")
+            on duplicate key update {setting}="{value}"
             """
         )
         self._conn.commit()
         cursor.close()
 
     def get_setting(self, user: int, setting: str) -> typing.Any:
-        if setting not in DatabaseProto.VALID_SETTINGS:
-            raise InvalidSetting
         cursor = self._conn.cursor()
         cursor.execute(
             f"""
-            select ({DatabaseProto.VALID_SETTINGS[setting][0]}) from settings where id={user}
+            select ({setting}) from settings where id={user}
             """
         )
         row = cursor.fetchone()
@@ -91,4 +84,4 @@ class DatabaseImpl(BotService):
             cursor.execute(f"insert into settings (id) values ({user})")
             self._conn.commit()
         cursor.close()
-        return UserSettings(*row) if row else UserSettings(user, "f")
+        return UserSettings(row[0], row[1] == 'i') if row else UserSettings(user, True)

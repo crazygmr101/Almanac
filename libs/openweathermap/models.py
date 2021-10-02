@@ -3,6 +3,8 @@ from typing import Optional, List
 
 from dataclasses_json import dataclass_json, config
 
+from bot.proto.database import UserSettings
+
 
 @dataclass_json
 @dataclass
@@ -14,18 +16,18 @@ class Condition:
 
 
 class Temperature(float):
-    def to_unit(self, unit: str) -> "Temperature":
-        return self if unit == "f" else (self - 32) / 1.8
+    def convert(self, settings: UserSettings) -> "Temperature":
+        return self if settings.imperial else (self - 32) / 1.8
 
 
 class Speed(float):
-    def to_unit(self, unit: str) -> "Speed":
-        return self if unit == "mph" else self * 1.60934
+    def convert(self, settings: UserSettings) -> "Speed":
+        return self if settings.imperial else self * 1.60934
 
 
 class Distance(float):
-    def to_unit(self, unit: str) -> "Distance":
-        return self if unit == "mi" else self * 1.60934
+    def convert(self, settings: UserSettings) -> "Distance":
+        return self if settings.imperial else self * 1.60934
 
 
 @dataclass_json

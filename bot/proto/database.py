@@ -15,7 +15,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import typing
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 
 from module_services.bot import BotService
 
@@ -30,18 +30,6 @@ class DatabaseProto(BotService):
     def get_settings(self, user: int) -> "UserSettings":
         raise NotImplementedError
 
-    VALID_SETTINGS: typing.Dict[str,
-                                typing.Tuple[str, typing.Callable[[str], bool],
-                                             str,
-                                             str]] = {
-        "temperature-unit": ("default_temp_unit", lambda x: len(x) == 1 and x.lower() in "cf",
-                             "Default temperature unit must be `f` or `c`.",
-                             "Default temperature unit"),
-        "speed-unit": ("default_speed_unit", lambda x: x.lower() in ("kph", "mph"),
-                       "Default speed unit must be `kph` or `mph`.",
-                       "Default speed unit")
-    }
-
 
 class InvalidSetting(Exception):
     ...
@@ -50,10 +38,13 @@ class InvalidSetting(Exception):
 @dataclass(frozen=True)
 class UserSettings:
     user: int
-    default_temp_unit: str
-    default_speed_unit: str
+    imperial: bool
+
+    def values(self) -> typing.Dict[str, typing.Any]:
+        return {
+            "Unit System": "Imperial" if self.imperial else "Metric"
+        }
 
     def __iter__(self) -> typing.Iterable[typing.Tuple[str, typing.Any]]:
-        for setting in DatabaseProto.VALID_SETTINGS.values():
-            if setting[0] in self.__dict__:
-                yield setting[3], self.__dict__[setting[0]]
+        for name, value in self.values().items():
+            yield name, value
