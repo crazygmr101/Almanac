@@ -20,17 +20,18 @@ from pathlib import Path
 
 import dotenv
 
-# from bot import LoggingHandler
-from bot.impl import WeatherServiceImpl, DatabaseImpl
+from bot import LoggingHandler
+
+dotenv.load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
-# logging.setLoggerClass(LoggingHandler)
+if os.getenv("CUSTOM_LOGGER") == "1":
+    logging.setLoggerClass(LoggingHandler)
 
 import hikari  # noqa E402
 import tanjun  # noqa E402
 from bot.proto import WeatherServiceProto, DatabaseProto
-
-dotenv.load_dotenv()
+from bot.impl import WeatherServiceImpl, DatabaseImpl
 
 db = DatabaseImpl.connect()
 
