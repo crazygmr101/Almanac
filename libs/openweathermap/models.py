@@ -66,6 +66,7 @@ class Wind:
     def gust(self) -> Optional[Speed]:
         return Speed(self._gust)
 
+
 @dataclass_json
 @dataclass
 class Clouds:

@@ -38,14 +38,17 @@ class OpenWeatherMapAPI:
         self._cache = ExpiringDict(max_len=1000, max_age_seconds=15 * 60)  # 15 mins
         self.disk_cache = DiskCache("/tmp/almanac/weather-maps/", timedelta(minutes=15))
 
-    async def get_current_conditions(self, latitude: float, longitude: float) -> CurrentConditionsResponse:
+    async def get_current_conditions(
+        self, latitude: float, longitude: float
+    ) -> CurrentConditionsResponse:
         latitude = round(latitude, 3)
         longitude = round(longitude, 3)
         res = self._cache.get((latitude, longitude), None)
         if res is not None:
             return res
         async with aiohttp.ClientSession() as sess:
-            async with sess.get(url=URL.build(
+            async with sess.get(
+                url=URL.build(
                     scheme="https",
                     host="api.openweathermap.org",
                     path="/data/2.5/weather",
@@ -53,9 +56,10 @@ class OpenWeatherMapAPI:
                         "appid": self.token,
                         "lat": latitude,
                         "lon": longitude,
-                        "units": "imperial"
-                    }
-            )) as resp:
+                        "units": "imperial",
+                    },
+                )
+            ) as resp:
                 r = await resp.json()
                 if r["cod"] != 200:
                     raise CityNotFoundError
@@ -71,14 +75,14 @@ class OpenWeatherMapAPI:
             buf.seek(0)
         else:
             async with aiohttp.ClientSession() as sess:
-                async with sess.get(url=URL.build(
+                async with sess.get(
+                    url=URL.build(
                         scheme="https",
                         host="tile.openweathermap.org",
                         path=f"/map/{layer}/{zoom}/{x}/{y}.png",
-                        query={
-                            "appid": self.token
-                        }
-                )) as resp:
+                        query={"appid": self.token},
+                    )
+                ) as resp:
                     buf = BytesIO()
                     buf.write(await resp.read())
                     buf.seek(0)
@@ -88,7 +92,9 @@ class OpenWeatherMapAPI:
         img.load()
         return img
 
-    async def radar_image(self, latitude: float, longitude: float, zoom: int, layer: str) -> Image.Image:
+    async def radar_image(
+        self, latitude: float, longitude: float, zoom: int, layer: str
+    ) -> Image.Image:
         tiles, location = get_tiles(latitude, longitude, zoom)
         images = [
             await self._radar_tile(tile[0], tile[1], zoom, layer)
@@ -96,7 +102,7 @@ class OpenWeatherMapAPI:
                 (tiles[0], tiles[1]),
                 (tiles[0], tiles[3]),
                 (tiles[2], tiles[1]),
-                (tiles[2], tiles[3])
+                (tiles[2], tiles[3]),
             ]
         ]
         return assemble_mosaic(images, location)

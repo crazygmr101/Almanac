@@ -50,18 +50,12 @@ color_patterns = {
     "hikari.bot": Fore.MAGENTA,
     "hikari.gateway": Fore.MAGENTA,
     "discord.http": Fore.RED,
-    "": Fore.YELLOW
+    "": Fore.YELLOW,
 }
 
-color_patterns_cache = {
-    "": Fore.YELLOW
-}
+color_patterns_cache = {"": Fore.YELLOW}
 
-ignored = {
-    "yougan-websocket": [
-        "Unknown op %s recieved from Node::%s"
-    ]
-}
+ignored = {"yougan-websocket": ["Unknown op %s recieved from Node::%s"]}
 
 
 class LoggingHandler(logging.Logger):
@@ -73,11 +67,12 @@ class LoggingHandler(logging.Logger):
         level_name = record.levelname
         message = record.msg % record.args
 
-        print(f"{colors2[level_name]}{styles[level_name]}{level_name:>8}{Style.RESET_ALL}"
-              f" "
-              f"{Style.BRIGHT}{self._get_color(name)}{name}{Style.RESET_ALL} " +
-              f"» "
-              f"{colors[level_name]}{message}{Style.RESET_ALL}")
+        print(
+            f"{colors2[level_name]}{styles[level_name]}{level_name:>8}{Style.RESET_ALL}"
+            f" "
+            f"{Style.BRIGHT}{self._get_color(name)}{name}{Style.RESET_ALL} " + f"» "
+            f"{colors[level_name]}{message}{Style.RESET_ALL}"
+        )
 
     # noinspection PyMethodMayBeStatic
     def _get_color(self, name: str) -> str:

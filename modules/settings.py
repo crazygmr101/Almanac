@@ -20,32 +20,42 @@ import tanjun
 from bot.proto import DatabaseProto
 
 component = tanjun.Component()
-settings_group = component.with_slash_command(tanjun.SlashCommandGroup("settings", "Settings"))
+settings_group = component.with_slash_command(
+    tanjun.SlashCommandGroup("settings", "Settings")
+)
 settings_set_group = settings_group.with_command(tanjun.SlashCommandGroup("set", "Set"))
 
 
 @settings_set_group.with_command
-@tanjun.with_str_slash_option("setting", "The setting to set",
-                              choices=[
-                                  ("Imperial", "imperial"),
-                                  ("Metric", "metric")
-                              ])
+@tanjun.with_str_slash_option(
+    "setting",
+    "The setting to set",
+    choices=[("Imperial", "imperial"), ("Metric", "metric")],
+)
 @tanjun.as_slash_command("units", "Set your default units")
-async def set_setting(ctx: tanjun.SlashContext, setting: str,
-                      _db: DatabaseProto = tanjun.injected(type=DatabaseProto)):
+async def set_setting(
+    ctx: tanjun.SlashContext,
+    setting: str,
+    _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
+):
     _db.set_setting(ctx.author.id, "unit_system", setting[0])
     await ctx.respond(_db.ok_embed("Success", f"Unit system set to {setting}"))
 
 
 @settings_group.with_command
 @tanjun.as_slash_command("list", "List your current settings")
-async def list_settings(ctx: tanjun.SlashContext, _db: DatabaseProto = tanjun.injected(type=DatabaseProto)):
+async def list_settings(
+    ctx: tanjun.SlashContext, _db: DatabaseProto = tanjun.injected(type=DatabaseProto)
+):
     await ctx.respond(
         content=None,
         embed=_db.ok_embed(
             "Settings list",
-            "\n".join(f"**{name}** - {value}" for name, value in _db.get_settings(ctx.author.id))
-        )
+            "\n".join(
+                f"**{name}** - {value}"
+                for name, value in _db.get_settings(ctx.author.id)
+            ),
+        ),
     )
 
 

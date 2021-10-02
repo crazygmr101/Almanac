@@ -41,9 +41,7 @@ class UserSettings:
     imperial: bool
 
     def values(self) -> typing.Dict[str, typing.Any]:
-        return {
-            "Unit System": "Imperial" if self.imperial else "Metric"
-        }
+        return {"Unit System": "Imperial" if self.imperial else "Metric"}
 
     def __iter__(self) -> typing.Iterable[typing.Tuple[str, typing.Any]]:
         for name, value in self.values().items():

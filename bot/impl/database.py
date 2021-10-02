@@ -24,12 +24,11 @@ from bot.proto.database import UserSettings
 from module_services.bot import BotService
 
 
-def connect_to_database(password: str, url: str, user: str, database: str) -> mysql.connector.MySQLConnection:
+def connect_to_database(
+    password: str, url: str, user: str, database: str
+) -> mysql.connector.MySQLConnection:
     return mysql.connector.connect(
-        user=user,
-        host=url,
-        password=password,
-        database=database
+        user=user, host=url, password=password, database=database
     )
 
 
@@ -43,8 +42,12 @@ class DatabaseImpl(BotService):
 
     @classmethod
     def connect(cls):
-        conn = connect_to_database(password=os.getenv("DATABASE_PASSWORD"), url=os.getenv("DATABASE_URL"),
-                                   user=os.getenv("DATABASE_USERNAME"), database=os.getenv("DATABASE_NAME"))
+        conn = connect_to_database(
+            password=os.getenv("DATABASE_PASSWORD"),
+            url=os.getenv("DATABASE_URL"),
+            user=os.getenv("DATABASE_USERNAME"),
+            database=os.getenv("DATABASE_NAME"),
+        )
         return cls(conn)
 
     def set_setting(self, user: int, setting: str, value: typing.Any):
@@ -84,4 +87,4 @@ class DatabaseImpl(BotService):
             cursor.execute(f"insert into settings (id) values ({user})")
             self._conn.commit()
         cursor.close()
-        return UserSettings(row[0], row[1] == 'i') if row else UserSettings(user, True)
+        return UserSettings(row[0], row[1] == "i") if row else UserSettings(user, True)

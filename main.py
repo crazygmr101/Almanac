@@ -30,18 +30,21 @@ if os.getenv("CUSTOM_LOGGER") == "1":
 
 import hikari  # noqa E402
 import tanjun  # noqa E402
-from bot.proto import WeatherServiceProto, DatabaseProto
-from bot.impl import WeatherServiceImpl, DatabaseImpl
+from bot.proto import WeatherServiceProto, DatabaseProto  # noqa 402
+from bot.impl import WeatherServiceImpl, DatabaseImpl  # noqa E402
 
 db = DatabaseImpl.connect()
 
 bot = hikari.GatewayBot(token=os.getenv("TOKEN"))
 client = (
-    tanjun.Client
-        .from_gateway_bot(bot, set_global_commands=os.getenv("GUILD") or False)  # noqa E131
-        .add_type_dependency(WeatherServiceProto, tanjun.cache_callback(lambda: WeatherServiceImpl()))
-        .set_type_dependency(DatabaseProto, lambda: db)
-        .load_modules(*Path("./modules").glob("**/*.py"))
+    tanjun.Client.from_gateway_bot(
+        bot, set_global_commands=os.getenv("GUILD") or False
+    )  # noqa E131
+    .add_type_dependency(
+        WeatherServiceProto, tanjun.cache_callback(lambda: WeatherServiceImpl())
+    )
+    .set_type_dependency(DatabaseProto, lambda: db)
+    .load_modules(*Path("./modules").glob("**/*.py"))
 )
 
 bot.run()

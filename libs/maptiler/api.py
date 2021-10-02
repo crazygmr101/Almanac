@@ -39,16 +39,17 @@ class MapTilerAPI:
             buf.seek(0)
         else:
             async with aiohttp.ClientSession() as sess:
-                async with sess.get(url=URL.build(
+                async with sess.get(
+                    url=URL.build(
                         scheme="https",
                         host="api.maptiler.com",
                         path=f"/maps/basic/256/{zoom}/{x}/{y}.png",
-                        query={
-                            "key": self.token
-                        }
-                ), headers={
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36" # noqa e501
-                }) as resp:
+                        query={"key": self.token},
+                    ),
+                    headers={
+                        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"  # noqa e501
+                    },
+                ) as resp:
                     buf.write(await resp.read())
             buf.seek(0)
             self.disk_cache.put(f"/{zoom}/{x}/{y}.png", buf.read())
@@ -66,7 +67,7 @@ class MapTilerAPI:
                 (tiles[0], tiles[1]),
                 (tiles[0], tiles[3]),
                 (tiles[2], tiles[1]),
-                (tiles[2], tiles[3])
+                (tiles[2], tiles[3]),
             ]
         ]
         return assemble_mosaic(images, location)

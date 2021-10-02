@@ -43,11 +43,11 @@ class GeocodingService:
             return None
         lat, lon = tuple(value.split(" "))
         try:
-            lat = (-1. if lat.endswith("s") else 1.) * float(re.sub("[ns]", "", lat))
+            lat = (-1.0 if lat.endswith("s") else 1.0) * float(re.sub("[ns]", "", lat))
         except ValueError:
             return None
         try:
-            lon = (-1. if lon.endswith("w") else 1.) * float(re.sub("[ew]", "", lon))
+            lon = (-1.0 if lon.endswith("w") else 1.0) * float(re.sub("[ew]", "", lon))
         except ValueError:
             return None
         return lat, lon

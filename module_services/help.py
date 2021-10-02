@@ -28,14 +28,19 @@ class HelpService(BotService):
     async def get_command_list(self, ctx: AlmanacContext) -> discord.Embed:
         return self.ok_embed(
             title="Command list",
-            description="\n".join([
-                f"`{command.qualified_name}` - {command.brief}"
-                for command in ctx.bot.walk_commands()
-                if not isinstance(command, commands.Group) and command.qualified_name != "help"
-            ])
+            description="\n".join(
+                [
+                    f"`{command.qualified_name}` - {command.brief}"
+                    for command in ctx.bot.walk_commands()
+                    if not isinstance(command, commands.Group)
+                    and command.qualified_name != "help"
+                ]
+            ),
         ).set_footer(text="Do ;help command for help with a command")
 
-    async def get_help_for_command(self, ctx: AlmanacContext, command: str) -> discord.Embed:
+    async def get_help_for_command(
+        self, ctx: AlmanacContext, command: str
+    ) -> discord.Embed:
         cmd: AlmanacCommand
         for cmd in ctx.bot.walk_commands():
             if cmd.qualified_name.lower() == command:
@@ -43,7 +48,7 @@ class HelpService(BotService):
         else:
             return self.error_embed(
                 title="Command not found",
-                description=f"`{command}` is an invalid command. Do `;help commands` to view a list of commands"
+                description=f"`{command}` is an invalid command. Do `;help commands` to view a list of commands",
             )
         if isinstance(cmd, commands.Group):
             return self.ok_embed(
@@ -52,7 +57,9 @@ class HelpService(BotService):
             ).add_field(
                 name="Subcommands",
                 value="\n".join(
-                    f"`{subcommand.qualified_name}` - {subcommand.brief}" for subcommand in cmd.walk_commands())
+                    f"`{subcommand.qualified_name}` - {subcommand.brief}"
+                    for subcommand in cmd.walk_commands()
+                ),
             )
         else:
             print(cmd.signature)
@@ -61,5 +68,9 @@ class HelpService(BotService):
                 description=cmd.brief,
             ).add_field(name="Usage Examples", value=cmd.usage, inline=False)
             if cmd.arg_list:
-                embed.add_field(name="Argument List", value="\n".join(cmd.argument_doc), inline=False)
+                embed.add_field(
+                    name="Argument List",
+                    value="\n".join(cmd.argument_doc),
+                    inline=False,
+                )
             return embed

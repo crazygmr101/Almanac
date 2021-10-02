@@ -33,15 +33,14 @@ class GoogleMapsAPI:
         if res is not None:
             return res
         async with aiohttp.ClientSession() as sess:
-            async with sess.get(url=URL.build(
+            async with sess.get(
+                url=URL.build(
                     host="maps.googleapis.com",
                     scheme="https",
                     path="/maps/api/geocode/json",
-                    query={
-                        "address": location,
-                        "key": self.token
-                    }
-            )) as resp:
+                    query={"address": location, "key": self.token},
+                )
+            ) as resp:
                 r = await resp.json()
                 res = GeocodeResponse.from_json(json.dumps(r))
                 self._cache[location] = res

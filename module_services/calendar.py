@@ -6,11 +6,23 @@ from typing import Tuple, Optional
 from discord import Interaction, Message, ButtonStyle
 from discord.ui import View, button, Button
 
-MONTHS = "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"
+MONTHS = (
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+)
 
 
 class CalendarService:
-
     def parse_ym(self, time: str) -> Tuple[int, int]:
         now = datetime.now()
         time = re.sub(r"\s(ad|bc)", "$1", time.lower())
@@ -111,7 +123,7 @@ class CalendarView(View):
     async def _refresh(self, msg: Message):
         await msg.edit(
             content=f"```"
-                    f"{self.calendar.formatmonth(self.year, self.month, 3)}"
-                    f"```",
-            view=self
+            f"{self.calendar.formatmonth(self.year, self.month, 3)}"
+            f"```",
+            view=self,
         )

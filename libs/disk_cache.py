@@ -20,8 +20,12 @@ class DiskCache:
     def get(self, path: str) -> Optional[bytes]:
         if not os.path.exists(f"{self.base_path}{path}"):
             return None
-        if self.age_limit and datetime.fromtimestamp(
-                os.path.getmtime(f"{self.base_path}{path}")) + self.age_limit < datetime.now():
+        if (
+            self.age_limit
+            and datetime.fromtimestamp(os.path.getmtime(f"{self.base_path}{path}"))
+            + self.age_limit
+            < datetime.now()
+        ):
             os.remove(f"{self.base_path}{path}")
             return None
         with open(f"{self.base_path}{path}", "rb") as fp:

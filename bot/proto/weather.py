@@ -10,8 +10,9 @@ from module_services.geocoding import GeocodingService
 
 # noinspection PyMethodMayBeStatic
 class WeatherServiceProto(BotService, GeocodingService):
-
-    async def current_conditions(self, city: str, settings: UserSettings) -> hikari.Embed:
+    async def current_conditions(
+        self, city: str, settings: UserSettings
+    ) -> hikari.Embed:
         raise NotImplementedError
 
     async def radar_map(self, city: str) -> hikari.Embed:
@@ -32,6 +33,4 @@ class WeatherServiceProto(BotService, GeocodingService):
     async def weather_map(self, city: str, zoom: int, layer: str) -> hikari.Embed:
         raise NotImplementedError
 
-    MAP_TYPES = {
-        "clouds", "precipitation", "pressure", "wind", "temperature"
-    }
+    MAP_TYPES = {"clouds", "precipitation", "pressure", "wind", "temperature"}
