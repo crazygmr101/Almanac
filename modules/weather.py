@@ -59,7 +59,10 @@ async def point(
 
 @weather_group.with_command
 @tanjun.with_int_slash_option(
-    "zoom", "Zoom level", choices=[(f"Level {n}", n) for n in range(1, 17)], default=8
+    "zoom",
+    "Zoom level",
+    choices=[(f"Level {n}", n) for n in range(1, 17)],
+    default=8,
 )
 @tanjun.with_str_slash_option(
     "layer",

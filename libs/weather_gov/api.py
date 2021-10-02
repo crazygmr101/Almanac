@@ -29,7 +29,9 @@ class WeatherGovAPI:
             max_len=1000, max_age_seconds=60 * 60 * 12
         )  # expire in 12h
 
-    async def lookup_point(self, latitude: float, longitude: float) -> WeatherGovPoint:
+    async def lookup_point(
+        self, latitude: float, longitude: float
+    ) -> WeatherGovPoint:
         latitude = round(latitude, 3)
         longitude = round(longitude, 3)
         res = self._cache.get((latitude, longitude), None)

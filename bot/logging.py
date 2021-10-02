@@ -70,7 +70,8 @@ class LoggingHandler(logging.Logger):
         print(
             f"{colors2[level_name]}{styles[level_name]}{level_name:>8}{Style.RESET_ALL}"
             f" "
-            f"{Style.BRIGHT}{self._get_color(name)}{name}{Style.RESET_ALL} " + f"» "
+            f"{Style.BRIGHT}{self._get_color(name)}{name}{Style.RESET_ALL} "
+            + f"» "
             f"{colors[level_name]}{message}{Style.RESET_ALL}"
         )
 

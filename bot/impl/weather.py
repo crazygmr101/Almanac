@@ -71,9 +71,13 @@ class WeatherServiceImpl(BotService, GeocodingService):
     async def radar_map(self, city: str) -> hikari.Embed:
         lat, lon = await self.parse_location(city)
         try:
-            data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
+            data = (
+                await self.weather_gov_api.lookup_point(lat, lon)
+            ).properties
         except aiohttp.ClientResponseError as e:
-            return self.error_embed(title="Lookup error", description=e.message)
+            return self.error_embed(
+                title="Lookup error", description=e.message
+            )
         except IndexError:
             return self.error_embed(
                 title="Lookup error",
@@ -123,10 +127,16 @@ class WeatherServiceImpl(BotService, GeocodingService):
 
     async def point_data(self, lat: float, lon: float) -> hikari.Embed:
         try:
-            data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
+            data = (
+                await self.weather_gov_api.lookup_point(lat, lon)
+            ).properties
         except aiohttp.ClientResponseError as e:
-            return self.error_embed(title="Lookup error", description=e.message)
-        miles = round(data.relative_location.properties.distance.value / 1609.34, 1)
+            return self.error_embed(
+                title="Lookup error", description=e.message
+            )
+        miles = round(
+            data.relative_location.properties.distance.value / 1609.34, 1
+        )
         relative_location = (
             f"{data.relative_location.properties.city}, "
             f"{data.relative_location.properties.state}"
@@ -144,7 +154,9 @@ class WeatherServiceImpl(BotService, GeocodingService):
         )
         return embed
 
-    async def raw_weather_map(self, city: str, zoom: int, layer: str) -> BytesIO:
+    async def raw_weather_map(
+        self, city: str, zoom: int, layer: str
+    ) -> BytesIO:
         lat, lon = await self.parse_location(city)
         buf = BytesIO()
         layer_img = await self.owm_api.radar_image(lat, lon, zoom, layer)
@@ -154,7 +166,9 @@ class WeatherServiceImpl(BotService, GeocodingService):
         buf.seek(0)
         return buf
 
-    async def weather_map(self, city: str, zoom: int, layer: str) -> hikari.Embed:
+    async def weather_map(
+        self, city: str, zoom: int, layer: str
+    ) -> hikari.Embed:
         return hikari.Embed(title=f"{layer.title()} Map for {city}").set_image(
             await self.raw_weather_map(city, zoom, layer)
         )

@@ -33,14 +33,18 @@ class CalendarService:
                 return now.year, month
         if len(split) > 2:
             return now.year, now.month
-        month, year = self.try_parse_month(split[0]), self.try_parse_year(split[1])
+        month, year = self.try_parse_month(split[0]), self.try_parse_year(
+            split[1]
+        )
         if month is not None and year is not None:
             return year, month
         if month is not None:
             possible_m_y = True, month
         else:
             possible_m_y = False, 0
-        month, year = self.try_parse_month(split[1]), self.try_parse_year(split[0])
+        month, year = self.try_parse_month(split[1]), self.try_parse_year(
+            split[0]
+        )
         if month is not None and year is not None:
             return year, month
         if year is not None:

@@ -12,7 +12,9 @@ def get_tiles(
     y = (
         (
             1.0
-            - math.log(math.tan(math.radians(lat)) + (1 / math.cos(math.radians(lat))))
+            - math.log(
+                math.tan(math.radians(lat)) + (1 / math.cos(math.radians(lat)))
+            )
             / math.pi
         )
         / 2.0
@@ -44,6 +46,11 @@ def assemble_mosaic(
     mosaic.paste(images[2], (256, 0))
     mosaic.paste(images[3], (256, 256))
     mosaic = mosaic.crop(
-        [location[0] - 128, location[1] - 128, location[0] + 128, location[1] + 128]
+        [
+            location[0] - 128,
+            location[1] - 128,
+            location[0] + 128,
+            location[1] + 128,
+        ]
     )
     return mosaic

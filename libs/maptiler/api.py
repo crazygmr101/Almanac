@@ -29,7 +29,9 @@ from libs.helpers import get_tiles, assemble_mosaic
 class MapTilerAPI:
     def __init__(self, token: str):
         self.token = token
-        self.disk_cache = DiskCache("/tmp/almanac/map-tiler/", timedelta(days=7))
+        self.disk_cache = DiskCache(
+            "/tmp/almanac/map-tiler/", timedelta(days=7)
+        )
 
     async def _map_tile(self, x: int, y: int, zoom: int) -> Image.Image:
         resp = self.disk_cache.get(f"/{zoom}/{x}/{y}.png")
@@ -59,7 +61,9 @@ class MapTilerAPI:
         img = img.convert("RGBA")
         return img
 
-    async def get_map_image(self, lat: float, lon: float, zoom: int) -> Image.Image:
+    async def get_map_image(
+        self, lat: float, lon: float, zoom: int
+    ) -> Image.Image:
         tiles, location = get_tiles(lat, lon, zoom)
         images = [
             await self._map_tile(tile[0], tile[1], zoom)

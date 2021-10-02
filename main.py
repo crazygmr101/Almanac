@@ -41,7 +41,8 @@ client = (
         bot, set_global_commands=os.getenv("GUILD") or False
     )  # noqa E131
     .add_type_dependency(
-        WeatherServiceProto, tanjun.cache_callback(lambda: WeatherServiceImpl())
+        WeatherServiceProto,
+        tanjun.cache_callback(lambda: WeatherServiceImpl()),
     )
     .set_type_dependency(DatabaseProto, lambda: db)
     .load_modules(*Path("./modules").glob("**/*.py"))

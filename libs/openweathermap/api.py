@@ -35,8 +35,12 @@ from libs.openweathermap.models import CurrentConditionsResponse
 class OpenWeatherMapAPI:
     def __init__(self, token):
         self.token: str = token
-        self._cache = ExpiringDict(max_len=1000, max_age_seconds=15 * 60)  # 15 mins
-        self.disk_cache = DiskCache("/tmp/almanac/weather-maps/", timedelta(minutes=15))
+        self._cache = ExpiringDict(
+            max_len=1000, max_age_seconds=15 * 60
+        )  # 15 mins
+        self.disk_cache = DiskCache(
+            "/tmp/almanac/weather-maps/", timedelta(minutes=15)
+        )
 
     async def get_current_conditions(
         self, latitude: float, longitude: float
@@ -67,7 +71,9 @@ class OpenWeatherMapAPI:
                 self._cache[(latitude, longitude)] = res
                 return res
 
-    async def _radar_tile(self, x: int, y: int, zoom: int, layer: str) -> Image.Image:
+    async def _radar_tile(
+        self, x: int, y: int, zoom: int, layer: str
+    ) -> Image.Image:
         resp = self.disk_cache.get(f"/{zoom}/{x}/{y}/{layer}.png")
         buf = BytesIO()
         if resp is not None:
@@ -86,7 +92,9 @@ class OpenWeatherMapAPI:
                     buf = BytesIO()
                     buf.write(await resp.read())
                     buf.seek(0)
-                    self.disk_cache.put(f"/{zoom}/{x}/{y}/{layer}.png", buf.read())
+                    self.disk_cache.put(
+                        f"/{zoom}/{x}/{y}/{layer}.png", buf.read()
+                    )
                     buf.seek(0)
         img: Image.Image = Image.open(buf)
         img.load()

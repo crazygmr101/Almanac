@@ -51,14 +51,20 @@ class WeatherGovPointProperties:
     grid_x: int = field(metadata=config(field_name="gridX"))
     grid_y: int = field(metadata=config(field_name="gridY"))
     forecast_url: str = field(metadata=config(field_name="forecast"))
-    forecast_hourly_url: str = field(metadata=config(field_name="forecastHourly"))
-    forecast_grid_url: str = field(metadata=config(field_name="forecastGridData"))
+    forecast_hourly_url: str = field(
+        metadata=config(field_name="forecastHourly")
+    )
+    forecast_grid_url: str = field(
+        metadata=config(field_name="forecastGridData")
+    )
     observation_stations_url: str = field(
         metadata=config(field_name="observationStations")
     )
     forecast_zone_url: str = field(metadata=config(field_name="forecastZone"))
     county_url: str = field(metadata=config(field_name="county"))
-    fire_weather_zone_url: str = field(metadata=config(field_name="fireWeatherZone"))
+    fire_weather_zone_url: str = field(
+        metadata=config(field_name="fireWeatherZone")
+    )
     timezone: str = field(metadata=config(field_name="timeZone"))
     relative_location: WeatherGovRelativeLocation = field(
         metadata=config(field_name="relativeLocation")

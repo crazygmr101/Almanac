@@ -23,7 +23,9 @@ component = tanjun.Component()
 settings_group = component.with_slash_command(
     tanjun.SlashCommandGroup("settings", "Settings")
 )
-settings_set_group = settings_group.with_command(tanjun.SlashCommandGroup("set", "Set"))
+settings_set_group = settings_group.with_command(
+    tanjun.SlashCommandGroup("set", "Set")
+)
 
 
 @settings_set_group.with_command
@@ -45,7 +47,8 @@ async def set_setting(
 @settings_group.with_command
 @tanjun.as_slash_command("list", "List your current settings")
 async def list_settings(
-    ctx: tanjun.SlashContext, _db: DatabaseProto = tanjun.injected(type=DatabaseProto)
+    ctx: tanjun.SlashContext,
+    _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
 ):
     await ctx.respond(
         content=None,

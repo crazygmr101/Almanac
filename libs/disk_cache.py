@@ -22,7 +22,9 @@ class DiskCache:
             return None
         if (
             self.age_limit
-            and datetime.fromtimestamp(os.path.getmtime(f"{self.base_path}{path}"))
+            and datetime.fromtimestamp(
+                os.path.getmtime(f"{self.base_path}{path}")
+            )
             + self.age_limit
             < datetime.now()
         ):

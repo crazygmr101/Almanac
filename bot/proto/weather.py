@@ -27,10 +27,14 @@ class WeatherServiceProto(BotService, GeocodingService):
     async def point_data(self, lat: float, lon: float) -> hikari.Embed:
         raise NotImplementedError
 
-    async def raw_weather_map(self, city: str, zoom: int, layer: str) -> BytesIO:
+    async def raw_weather_map(
+        self, city: str, zoom: int, layer: str
+    ) -> BytesIO:
         raise NotImplementedError
 
-    async def weather_map(self, city: str, zoom: int, layer: str) -> hikari.Embed:
+    async def weather_map(
+        self, city: str, zoom: int, layer: str
+    ) -> hikari.Embed:
         raise NotImplementedError
 
     MAP_TYPES = {"clouds", "precipitation", "pressure", "wind", "temperature"}

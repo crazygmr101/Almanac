@@ -15,7 +15,9 @@ FRIENDLY_TYPE_NAMES = {
 
 class AlmanacCommand(commands.Command):
     def __init__(self, func, name, **attrs):
-        self.arg_list: Dict[str, Tuple[bool, type, str]] = attrs.pop("arg_list")
+        self.arg_list: Dict[str, Tuple[bool, type, str]] = attrs.pop(
+            "arg_list"
+        )
         super(AlmanacCommand, self).__init__(func, name=name, **attrs)
 
     @property
@@ -36,11 +38,15 @@ class AlmanacCommand(commands.Command):
         result = []
         for name, param in params.items():
             greedy = isinstance(param.annotation, Greedy)
-            optional = False  # postpone evaluation of if it's an optional argument
+            optional = (
+                False  # postpone evaluation of if it's an optional argument
+            )
 
             # for typing.Literal[...], typing.Optional[typing.Literal[...]], and Greedy[typing.Literal[...]], the
             # parameter signature is a literal list of it's values
-            annotation = param.annotation.converter if greedy else param.annotation
+            annotation = (
+                param.annotation.converter if greedy else param.annotation
+            )
             origin = getattr(annotation, "__origin__", None)
             if not greedy and origin is Union:
                 none_cls = type(None)

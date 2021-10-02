@@ -87,4 +87,8 @@ class DatabaseImpl(BotService):
             cursor.execute(f"insert into settings (id) values ({user})")
             self._conn.commit()
         cursor.close()
-        return UserSettings(row[0], row[1] == "i") if row else UserSettings(user, True)
+        return (
+            UserSettings(row[0], row[1] == "i")
+            if row
+            else UserSettings(user, True)
+        )
