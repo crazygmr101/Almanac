@@ -14,8 +14,18 @@ class Condition:
 
 
 class Temperature(float):
-    def to(self, unit: str):
+    def to_unit(self, unit: str) -> "Temperature":
         return self if unit == "f" else (self - 32) / 1.8
+
+
+class Speed(float):
+    def to_unit(self, unit: str) -> "Speed":
+        return self if unit == "mph" else self * 1.60934
+
+
+class Distance(float):
+    def to_unit(self, unit: str) -> "Distance":
+        return self if unit == "mi" else self * 1.60934
 
 
 @dataclass_json
@@ -42,10 +52,17 @@ class DetailedCondition:
 @dataclass_json
 @dataclass
 class Wind:
-    speed: float
+    _speed: float = field(metadata=config(field_name="speed"))
     direction: int = field(metadata=config(field_name="deg"))
-    gust: Optional[float] = None
+    _gust: Optional[float] = field(metadata=config(field_name="gust"))
 
+    @property
+    def speed(self) -> Speed:
+        return Speed(self._speed)
+
+    @property
+    def gust(self) -> Optional[Speed]:
+        return Speed(self._gust)
 
 @dataclass_json
 @dataclass

@@ -36,7 +36,10 @@ class DatabaseProto(BotService):
                                              str]] = {
         "temperature-unit": ("default_temp_unit", lambda x: len(x) == 1 and x.lower() in "cf",
                              "Default temperature unit must be `f` or `c`.",
-                             "Default temperature unit")
+                             "Default temperature unit"),
+        "speed-unit": ("default_speed_unit", lambda x: x.lower() in ("kph", "mph"),
+                       "Default speed unit must be `kph` or `mph`.",
+                       "Default speed unit")
     }
 
 
@@ -48,6 +51,7 @@ class InvalidSetting(Exception):
 class UserSettings:
     user: int
     default_temp_unit: str
+    default_speed_unit: str
 
     def __iter__(self) -> typing.Iterable[typing.Tuple[str, typing.Any]]:
         for setting in DatabaseProto.VALID_SETTINGS.values():

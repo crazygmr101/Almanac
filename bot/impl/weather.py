@@ -29,13 +29,14 @@ class WeatherServiceImpl(BotService, GeocodingService):
         sunset = datetime.utcfromtimestamp(conditions.sys.sunset + conditions.timezone).strftime("%-I:%M %p")
         embed = self.ok_embed(title=f"**Conditions for {conditions.city_name}, {conditions.sys.country}**\n",
                               description=f"🏙 {conditions.weather[0].description.title()}\n"
-                                          f"🌡️ **{int(conditions.main.temp.to(settings.default_temp_unit))}**°"
+                                          f"🌡️ **{int(conditions.main.temp.to_unit(settings.default_temp_unit))}**°"
                                           f"{settings.default_temp_unit.upper()} "
                                           f"(feels like **"
-                                          f"{int(conditions.main.feels_like.to(settings.default_temp_unit))}**°)\n"
+                                          f"{int(conditions.main.feels_like.to_unit(settings.default_temp_unit))}**°)\n"
                                           f"🌅 **Sunrise**: {sunrise}\n"
                                           f"🌇 **Sunset**: {sunset}\n"
-                                          f"🌬️ **{int(conditions.wind.speed)}** MPH from "
+                                          f"🌬️ **{int(conditions.wind.speed.to_unit(settings.default_speed_unit))}**"
+                                          f" {settings.default_speed_unit.upper()} from "
                                           f"{self.direction_for(conditions.wind.direction)}") \
             .set_thumbnail(self.icon_url_for(conditions.weather[0].icon)) \
             .set_footer(text=f"Powered by OpenWeatherMap | {round(lat, 4)} {round(lon, 4)}")

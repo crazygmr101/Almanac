@@ -14,6 +14,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import logging
 import os
 import typing
 from dataclasses import dataclass, Field, fields
@@ -36,15 +37,8 @@ def connect_to_database(password: str, url: str, user: str, database: str) -> my
 class DatabaseImpl(BotService):
     def __init__(self, connection: mysql.connector.MySQLConnection):
         self._conn = connection
+        self._logger = logging.getLogger(__name__)
         cursor = self._conn.cursor()
-        cursor.execute(
-            """
-            create table if not exists settings (
-                id bigint not null primary key unique,
-                default_temp_unit char(1) default 'F' not null
-            )
-            """
-        )
         self._conn.commit()
         cursor.close()
 
@@ -97,4 +91,4 @@ class DatabaseImpl(BotService):
             cursor.execute(f"insert into settings (id) values ({user})")
             self._conn.commit()
         cursor.close()
-        return UserSettings(user, row[1]) if row else UserSettings(user, "f")
+        return UserSettings(*row) if row else UserSettings(user, "f")
