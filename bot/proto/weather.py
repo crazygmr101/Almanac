@@ -3,6 +3,7 @@ from typing import Union
 
 import hikari
 
+from bot.proto.database import UserSettings
 from module_services.bot import BotService
 from module_services.geocoding import GeocodingService
 
@@ -10,7 +11,7 @@ from module_services.geocoding import GeocodingService
 # noinspection PyMethodMayBeStatic
 class WeatherServiceProto(BotService, GeocodingService):
 
-    async def current_conditions(self, city: str) -> hikari.Embed:
+    async def current_conditions(self, city: str, settings: UserSettings) -> hikari.Embed:
         raise NotImplementedError
 
     async def radar_map(self, city: str) -> hikari.Embed:

@@ -17,7 +17,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 import tanjun
 
-from bot.proto import WeatherServiceProto
+from bot.proto import WeatherServiceProto, DatabaseProto
 
 component = tanjun.Component()
 weather_group = component.with_slash_command(tanjun.SlashCommandGroup("weather", "Weather commands"))
@@ -28,8 +28,9 @@ weather_nws_group = weather_group.with_command(tanjun.SlashCommandGroup("nws", "
 @tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command("current", "Current weather at a location")
 async def current(ctx: tanjun.SlashContext, location: str,
-                  _service: WeatherServiceProto = tanjun.injected(type=WeatherServiceProto)):
-    await ctx.respond(embed=await _service.current_conditions(location))
+                  _service: WeatherServiceProto = tanjun.injected(type=WeatherServiceProto),
+                  _db: DatabaseProto = tanjun.injected(type=DatabaseProto)):
+    await ctx.respond(embed=await _service.current_conditions(location, _db.get_settings(ctx.author.id)))
 
 
 @weather_nws_group.with_command

@@ -13,17 +13,30 @@ class Condition:
     icon: str
 
 
+class Temperature(float):
+    def to(self, unit: str):
+        return self if unit == "f" else (self - 32) / 1.8
+
+
 @dataclass_json
 @dataclass
 class DetailedCondition:
-    temp: float
-    feels_like: float
+    _temp: float = field(metadata=config(field_name="temp"))
+    _feels_like: float = field(metadata=config(field_name="feels_like"))
     temp_min: float
     temp_max: float
     pressure: float
     humidity: int
     sea_level: Optional[int] = None
     grnd_level: Optional[int] = None
+
+    @property
+    def temp(self) -> Temperature:
+        return Temperature(self._temp)
+
+    @property
+    def feels_like(self) -> Temperature:
+        return Temperature(self._feels_like)
 
 
 @dataclass_json

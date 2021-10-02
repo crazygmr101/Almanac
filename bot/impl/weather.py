@@ -6,6 +6,7 @@ from typing import Union
 import aiohttp
 import hikari
 
+from bot.proto.database import UserSettings
 from libs.maptiler import MapTilerAPI
 from libs.openweathermap import OpenWeatherMapAPI
 from libs.weather_gov import WeatherGovAPI
@@ -21,19 +22,17 @@ class WeatherServiceImpl(BotService, GeocodingService):
         self.weather_gov_api = WeatherGovAPI()
         self.map_api = MapTilerAPI(os.getenv("MAPTILER"))
 
-    async def current_conditions(self, city: str) -> hikari.Embed:
+    async def current_conditions(self, city: str, settings: UserSettings) -> hikari.Embed:
         lat, lon = await self.parse_location(city)
-        try:
-            data = (await self.weather_gov_api.lookup_point(lat, lon)).properties
-        except aiohttp.ClientResponseError as e:
-            return self.error_embed(title="Lookup error", description=e.message)
         conditions = await self.owm_api.get_current_conditions(lat, lon)
         sunrise = datetime.utcfromtimestamp(conditions.sys.sunrise + conditions.timezone).strftime("%-I:%M %p")
         sunset = datetime.utcfromtimestamp(conditions.sys.sunset + conditions.timezone).strftime("%-I:%M %p")
         embed = self.ok_embed(title=f"**Conditions for {conditions.city_name}, {conditions.sys.country}**\n",
                               description=f"🏙 {conditions.weather[0].description.title()}\n"
-                                          f"🌡️ **{int(conditions.main.temp)}**°F "
-                                          f"(feels like **{int(conditions.main.feels_like)}**°)\n"
+                                          f"🌡️ **{int(conditions.main.temp.to(settings.default_temp_unit))}**°"
+                                          f"{settings.default_temp_unit.upper()} "
+                                          f"(feels like **"
+                                          f"{int(conditions.main.feels_like.to(settings.default_temp_unit))}**°)\n"
                                           f"🌅 **Sunrise**: {sunrise}\n"
                                           f"🌇 **Sunset**: {sunset}\n"
                                           f"🌬️ **{int(conditions.wind.speed)}** MPH from "
@@ -57,7 +56,8 @@ class WeatherServiceImpl(BotService, GeocodingService):
         except aiohttp.ClientResponseError as e:
             return self.error_embed(title="Lookup error", description=e.message)
         except IndexError:
-            return self.error_embed(title="Lookup error", description="Not found")
+            return self.error_embed(title="Lookup error",
+                                    description="No data was available for the specified location")
         conditions = await self.owm_api.get_current_conditions(lat, lon)
         if data.radar_station:
             embed = self.ok_embed(title=f"**Radar for {conditions.city_name}, {conditions.sys.country}**",

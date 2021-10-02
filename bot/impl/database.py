@@ -1,0 +1,100 @@
+"""
+Copyright 2021 crazygmr101
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the 
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the 
+Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE 
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+import os
+import typing
+from dataclasses import dataclass, Field, fields
+
+import mysql.connector
+
+from bot.proto import DatabaseProto
+from bot.proto.database import InvalidSetting, UserSettings
+from module_services.bot import BotService
+
+
+def connect_to_database(password: str, url: str, user: str, database: str) -> mysql.connector.MySQLConnection:
+    return mysql.connector.connect(
+        user=user,
+        host=url,
+        password=password,
+        database=database
+    )
+
+class DatabaseImpl(BotService):
+    def __init__(self, connection: mysql.connector.MySQLConnection):
+        self._conn = connection
+        cursor = self._conn.cursor()
+        cursor.execute(
+            """
+            create table if not exists settings (
+                id bigint not null primary key unique,
+                default_temp_unit char(1) default 'F' not null
+            )
+            """
+        )
+        self._conn.commit()
+        cursor.close()
+
+    @classmethod
+    def connect(cls):
+        conn = connect_to_database(password=os.getenv("DATABASE_PASSWORD"), url=os.getenv("DATABASE_URL"),
+                                   user=os.getenv("DATABASE_USERNAME"), database=os.getenv("DATABASE_NAME"))
+        return cls(conn)
+
+    def set_setting(self, user: int, setting: str, value: typing.Any):
+        if setting not in DatabaseProto.VALID_SETTINGS:
+            raise InvalidSetting
+        if not DatabaseProto.VALID_SETTINGS[setting][1](value):
+            raise ValueError(DatabaseProto.VALID_SETTINGS[setting][2])
+        cursor = self._conn.cursor()
+        cursor.execute(
+            f"""
+            insert into settings (id, {DatabaseProto.VALID_SETTINGS[setting][0]}) values ({user}, "{value}")
+            on duplicate key update {DatabaseProto.VALID_SETTINGS[setting][0]}="{value}"
+            """
+        )
+        self._conn.commit()
+        cursor.close()
+
+    def get_setting(self, user: int, setting: str) -> typing.Any:
+        if setting not in DatabaseProto.VALID_SETTINGS:
+            raise InvalidSetting
+        cursor = self._conn.cursor()
+        cursor.execute(
+            f"""
+            select ({DatabaseProto.VALID_SETTINGS[setting][0]}) from settings where id={user}
+            """
+        )
+        row = cursor.fetchone()
+        if not row:
+            cursor.execute(f"insert into settings (id) values ({user})")
+            self._conn.commit()
+        cursor.close()
+        return row[0] if row else "f"
+
+    def get_settings(self, user: int) -> UserSettings:
+        cursor = self._conn.cursor()
+        cursor.execute(
+            f"""
+            select * from settings where id={user}
+            """
+        )
+        row = cursor.fetchone()
+        if not row:
+            cursor.execute(f"insert into settings (id) values ({user})")
+            self._conn.commit()
+        cursor.close()
+        return UserSettings(user, row[1]) if row else UserSettings(user, "f")
