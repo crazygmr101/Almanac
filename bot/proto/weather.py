@@ -10,6 +10,9 @@ from module_services.geocoding import GeocodingService
 
 # noinspection PyMethodMayBeStatic
 class WeatherServiceProto(BotService, GeocodingService):
+    async def current_pollution(self, city: str) -> hikari.Embed:
+        raise NotImplementedError
+
     async def current_conditions(
         self, city: str, settings: UserSettings
     ) -> hikari.Embed:

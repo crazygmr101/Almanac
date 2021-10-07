@@ -18,8 +18,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from io import BytesIO
-from pprint import pprint
-from typing import Tuple, Dict
+from typing import Tuple
 
 import aiohttp
 from PIL import Image
@@ -31,14 +30,17 @@ from libs.helpers import get_tiles, assemble_mosaic
 from libs.openweathermap.errors import CityNotFoundError
 from libs.openweathermap.models import (
     CurrentConditionsResponse,
-    PollutionIndexResponse,
+    CurrentPollutionIndexResponse,
 )
 
 
 class OpenWeatherMapAPI:
     def __init__(self, token):
         self.token: str = token
-        self._cache = ExpiringDict(
+        self._condition_cache = ExpiringDict(
+            max_len=1000, max_age_seconds=15 * 60
+        )  # 15 mins
+        self._pollution_cache = ExpiringDict(
             max_len=1000, max_age_seconds=15 * 60
         )  # 15 mins
         self.disk_cache = DiskCache(
@@ -54,16 +56,14 @@ class OpenWeatherMapAPI:
             query=kwargs,
         )
 
-    async def get_current_conditions(
+    async def get_current_weather(
         self, latitude: float, longitude: float
-    ) -> Tuple[CurrentConditionsResponse, PollutionIndexResponse]:
+    ) -> CurrentConditionsResponse:
         latitude = round(latitude, 3)
         longitude = round(longitude, 3)
-        conditions, pollution = self._cache.get(
-            (latitude, longitude), (None, None)
-        )
-        if conditions is not None:
-            return conditions, pollution
+        conditions = self._condition_cache.get((latitude, longitude), None)
+        if conditions:
+            return conditions
         async with aiohttp.ClientSession() as sess:
             async with sess.get(
                 url=self._route(
@@ -79,16 +79,35 @@ class OpenWeatherMapAPI:
                 conditions: CurrentConditionsResponse = (
                     CurrentConditionsResponse.from_json(await resp.read())
                 )
+                self._condition_cache[(latitude, longitude)] = conditions
+        return conditions
+
+    async def get_current_pollution(
+        self, latitude: float, longitude: float
+    ) -> CurrentPollutionIndexResponse:
+        latitude = round(latitude, 3)
+        longitude = round(longitude, 3)
+        pollution = self._pollution_cache.get((latitude, longitude), None)
+        if pollution:
+            return pollution
+        async with aiohttp.ClientSession() as sess:
             async with sess.get(
                 url=self._route(
                     "/data/2.5/air_pollution", lat=latitude, lon=longitude
                 )
             ) as resp:
-                pollution: PollutionIndexResponse = (
-                    PollutionIndexResponse.from_json(await resp.read())
+                pollution: CurrentPollutionIndexResponse = (
+                    CurrentPollutionIndexResponse.from_json(await resp.read())
                 )
-        self._cache[(latitude, longitude)] = (conditions, pollution)
-        return conditions, pollution
+            self._pollution_cache[(latitude, longitude)] = pollution
+        return pollution
+
+    async def get_current_conditions(
+        self, latitude: float, longitude: float
+    ) -> Tuple[CurrentConditionsResponse, CurrentPollutionIndexResponse]:
+        return await self.get_current_weather(
+            latitude, longitude
+        ), await self.get_current_pollution(latitude, longitude)
 
     async def _radar_tile(
         self, x: int, y: int, zoom: int, layer: str

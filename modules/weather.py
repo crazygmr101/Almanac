@@ -86,6 +86,19 @@ async def weather_map(
 
 @weather_group.with_command
 @tanjun.with_str_slash_option("location", "Location to look up")
+@tanjun.as_slash_command(
+    "pollution", "Look up detailed pollution data for a location"
+)
+async def pollution_data(
+    ctx: tanjun.SlashContext,
+    location: str,
+    _service: WeatherServiceProto = tanjun.injected(type=WeatherServiceProto),
+):
+    await ctx.respond(embed=await _service.current_pollution(location))
+
+
+@weather_group.with_command
+@tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command("radar", "Look up the radar for a location")
 async def radar(
     ctx: tanjun.SlashContext,

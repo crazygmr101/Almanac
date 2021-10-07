@@ -22,6 +22,21 @@ class WeatherServiceImpl(BotService, GeocodingService):
         self.weather_gov_api = WeatherGovAPI()
         self.map_api = MapTilerAPI(os.getenv("MAPTILER"))
 
+    async def current_pollution(self, city: str) -> hikari.Embed:
+        lat, lon = await self.parse_location(city)
+        conditions, pollution = await self.owm_api.get_current_conditions(
+            lat, lon
+        )
+        return self.ok_embed(
+            title=f"**Current Pollution Data for {conditions.city_name}, {conditions.sys.country}**\n",
+            description=f"**Pollution Index**: {pollution.data.main.aqi} - {pollution.data.main}\n\n"
+            f"**Contaminant Levels**\n"
+            + "\n".join(
+                f" - {pretty_name}: {round(value, 3)} µg/m³"
+                for pretty_name, value in pollution.data.components.levels.items()
+            ),
+        )
+
     async def current_conditions(
         self, city: str, settings: UserSettings
     ) -> hikari.Embed:

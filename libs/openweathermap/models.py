@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from dataclasses_json import dataclass_json, config
 
 from bot.proto.database import UserSettings
+from libs.helpers import cast_or
 
 
 @dataclass_json
@@ -134,6 +135,22 @@ class PollutionIndexResponseComponents:
     pm10: float
     nh3: float
 
+    @property
+    def levels(self) -> Dict[str, Optional[float]]:
+        return {
+            pretty_name: float(self.__dict__[field_name])
+            for pretty_name, field_name in {
+                "CO": "co",
+                "NO": "no",
+                "NO₂": "no2",
+                "O₃": "o3",
+                "SO₂": "so2",
+                "Fine Particles": "pm2_5",
+                "Coarse Particles": "pm10",
+                "NH₃": "nh3",
+            }.items()
+        }
+
 
 @dataclass_json
 @dataclass
@@ -145,7 +162,7 @@ class PollutionIndexResponseData:
 
 @dataclass_json
 @dataclass
-class PollutionIndexResponse:
+class CurrentPollutionIndexResponse:
     coord: Coordinates
     list: List[PollutionIndexResponseData]
 
