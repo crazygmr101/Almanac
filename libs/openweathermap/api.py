@@ -29,7 +29,10 @@ from yarl import URL
 from libs.disk_cache import DiskCache
 from libs.helpers import get_tiles, assemble_mosaic
 from libs.openweathermap.errors import CityNotFoundError
-from libs.openweathermap.models import CurrentConditionsResponse
+from libs.openweathermap.models import (
+    CurrentConditionsResponse,
+    PollutionIndexResponse,
+)
 
 
 class OpenWeatherMapAPI:
@@ -42,34 +45,50 @@ class OpenWeatherMapAPI:
             "/tmp/almanac/weather-maps/", timedelta(minutes=15)
         )
 
+    def _route(self, path: str, **kwargs) -> URL:
+        kwargs.update({"appid": self.token})
+        return URL.build(
+            scheme="https",
+            host="api.openweathermap.org",
+            path=path,
+            query=kwargs,
+        )
+
     async def get_current_conditions(
         self, latitude: float, longitude: float
-    ) -> CurrentConditionsResponse:
+    ) -> Tuple[CurrentConditionsResponse, PollutionIndexResponse]:
         latitude = round(latitude, 3)
         longitude = round(longitude, 3)
-        res = self._cache.get((latitude, longitude), None)
-        if res is not None:
-            return res
+        conditions, pollution = self._cache.get(
+            (latitude, longitude), (None, None)
+        )
+        if conditions is not None:
+            return conditions, pollution
         async with aiohttp.ClientSession() as sess:
             async with sess.get(
-                url=URL.build(
-                    scheme="https",
-                    host="api.openweathermap.org",
-                    path="/data/2.5/weather",
-                    query={
-                        "appid": self.token,
-                        "lat": latitude,
-                        "lon": longitude,
-                        "units": "imperial",
-                    },
+                url=self._route(
+                    "/data/2.5/weather",
+                    lat=latitude,
+                    lon=longitude,
+                    units="imperial",
                 )
             ) as resp:
                 r = await resp.json()
                 if r["cod"] != 200:
                     raise CityNotFoundError
-                res = CurrentConditionsResponse.from_json(await resp.read())
-                self._cache[(latitude, longitude)] = res
-                return res
+                conditions: CurrentConditionsResponse = (
+                    CurrentConditionsResponse.from_json(await resp.read())
+                )
+            async with sess.get(
+                url=self._route(
+                    "/data/2.5/air_pollution", lat=latitude, lon=longitude
+                )
+            ) as resp:
+                pollution: PollutionIndexResponse = (
+                    PollutionIndexResponse.from_json(await resp.read())
+                )
+        self._cache[(latitude, longitude)] = (conditions, pollution)
+        return conditions, pollution
 
     async def _radar_tile(
         self, x: int, y: int, zoom: int, layer: str

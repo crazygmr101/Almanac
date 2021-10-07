@@ -111,3 +111,44 @@ class CurrentConditionsResponse:
     city_name: int = field(metadata=config(field_name="name"))
     rain: Optional[Precipitation] = None
     snow: Optional[Precipitation] = None
+
+
+@dataclass_json
+@dataclass
+class PollutionIndexResponseMain:
+    aqi: int
+
+    def __str__(self) -> str:
+        return ("Good", "Fair", "Moderate", "Poor", "Very Poor")[self.aqi]
+
+
+@dataclass_json
+@dataclass
+class PollutionIndexResponseComponents:
+    co: float
+    no: float
+    no2: float
+    o3: float
+    so2: float
+    pm2_5: float
+    pm10: float
+    nh3: float
+
+
+@dataclass_json
+@dataclass
+class PollutionIndexResponseData:
+    dt: int
+    main: PollutionIndexResponseMain
+    components: PollutionIndexResponseComponents
+
+
+@dataclass_json
+@dataclass
+class PollutionIndexResponse:
+    coord: Coordinates
+    list: List[PollutionIndexResponseData]
+
+    @property
+    def data(self) -> PollutionIndexResponseData:
+        return self.list[0]

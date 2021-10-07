@@ -26,7 +26,9 @@ class WeatherServiceImpl(BotService, GeocodingService):
         self, city: str, settings: UserSettings
     ) -> hikari.Embed:
         lat, lon = await self.parse_location(city)
-        conditions = await self.owm_api.get_current_conditions(lat, lon)
+        conditions, pollution = await self.owm_api.get_current_conditions(
+            lat, lon
+        )
         sunrise = datetime.utcfromtimestamp(
             conditions.sys.sunrise + conditions.timezone
         ).strftime("%-I:%M %p")
@@ -45,7 +47,8 @@ class WeatherServiceImpl(BotService, GeocodingService):
                 f"🌇 **Sunset**: {sunset}\n"
                 f"🌬️ **{int(conditions.wind.speed.convert(settings))}**"
                 f" {'mph' if settings.imperial else 'km/h'} from "
-                f"{self.direction_for(conditions.wind.direction)}",
+                f"{self.direction_for(conditions.wind.direction)}\n"
+                f"🏭 **Pollution Index**: {pollution.data.main.aqi} - {pollution.data.main}",
             )
             .set_thumbnail(self.icon_url_for(conditions.weather[0].icon))
             .set_footer(
