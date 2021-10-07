@@ -34,7 +34,7 @@ def get_tiles(
     center_y = max(y1, y2)
     x_pos = int(256 + (x - int(center_x)) * 256)
     y_pos = int(256 + (y - int(center_y)) * 256)
-    return ((x1, y1, x2, y2), (x_pos, y_pos))
+    return (x1, y1, x2, y2), (x_pos, y_pos)
 
 
 def assemble_mosaic(
