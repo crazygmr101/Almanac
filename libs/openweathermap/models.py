@@ -4,7 +4,6 @@ from typing import Optional, List, Dict
 from dataclasses_json import dataclass_json, config
 
 from bot.proto.database import UserSettings
-from libs.helpers import cast_or
 
 
 @dataclass_json

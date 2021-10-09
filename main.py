@@ -21,6 +21,7 @@ from pathlib import Path
 import dotenv
 
 from bot import LoggingHandler
+from libs.astronomy import AstronomyAPI
 
 dotenv.load_dotenv()
 
@@ -40,11 +41,12 @@ client = (
     tanjun.Client.from_gateway_bot(
         bot, set_global_commands=os.getenv("GUILD") or False
     )  # noqa E131
-    .add_type_dependency(
+    .set_type_dependency(
         WeatherServiceProto,
-        tanjun.cache_callback(lambda: WeatherServiceImpl()),
+        WeatherServiceImpl(),
     )
-    .set_type_dependency(DatabaseProto, lambda: db)
+    .set_type_dependency(DatabaseProto, db)
+    .set_type_dependency(AstronomyAPI, AstronomyAPI())
     .load_modules(*Path("./modules").glob("**/*.py"))
 )
 
