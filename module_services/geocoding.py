@@ -22,7 +22,7 @@ from libs.googlemaps import GoogleMapsAPI
 
 
 # noinspection PyMethodMayBeStatic
-class GeocodingService:
+class Geocoder:
     def __init__(self):
         self.gmaps_api = GoogleMapsAPI(os.getenv("GMAPS"))
 
