@@ -16,8 +16,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from hikari import Embed
 
+
 # noinspection PyMethodMayBeStatic
-class BotService:
+class EmbedCreator:
     def error_embed(self, title: str, description: str = None):
         return Embed(title=title, description=description, color=0x880000)
 

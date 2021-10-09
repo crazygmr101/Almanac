@@ -20,7 +20,7 @@ import tanjun
 
 from bot.converters import parse_datetime
 from libs.astronomy import AstronomyAPI
-from module_services.bot import BotService
+from module_services.bot import EmbedCreator
 
 component = tanjun.Component()
 astro_group = component.with_slash_command(
@@ -35,7 +35,7 @@ async def seasons(
     ctx: tanjun.SlashContext,
     year: int,
     _api: AstronomyAPI = tanjun.injected(type=AstronomyAPI),
-    _bot: BotService = tanjun.injected(type=BotService),
+    _bot: EmbedCreator = tanjun.injected(type=EmbedCreator),
 ):
     await ctx.respond(
         embed=_bot.ok_embed(
@@ -65,7 +65,7 @@ async def date_data(
     ctx: tanjun.SlashContext,
     date: datetime,
     _api: AstronomyAPI = tanjun.injected(type=AstronomyAPI),
-    _bot: BotService = tanjun.injected(type=BotService),
+    _bot: EmbedCreator = tanjun.injected(type=EmbedCreator),
 ):
     await ctx.respond(
         embed=_bot.ok_embed(

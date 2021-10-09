@@ -17,7 +17,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 import tanjun
 
-from bot.proto import WeatherServiceProto, DatabaseProto
+from bot.proto import DatabaseProto
+from module_services.weather import WeatherAPI
 
 component = tanjun.Component()
 weather_group = component.with_slash_command(
@@ -34,7 +35,7 @@ weather_nws_group = weather_group.with_command(
 async def current(
     ctx: tanjun.SlashContext,
     location: str,
-    _service: WeatherServiceProto = tanjun.injected(type=WeatherServiceProto),
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
     _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
 ):
     await ctx.respond(
@@ -52,7 +53,7 @@ async def point(
     ctx: tanjun.SlashContext,
     latitude: float,
     longitude: float,
-    _service: WeatherServiceProto = tanjun.injected(type=WeatherServiceProto),
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
 ):
     await ctx.respond(embed=await _service.point_data(latitude, longitude))
 
@@ -68,7 +69,7 @@ async def point(
     "layer",
     "Map type to look up",
     default="clouds",
-    choices=[(typ.title(), typ) for typ in WeatherServiceProto.MAP_TYPES],
+    choices=[(typ.title(), typ) for typ in WeatherAPI.MAP_TYPES],
 )
 @tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command(
@@ -79,7 +80,7 @@ async def weather_map(
     zoom: int,
     layer: str,
     location: str,
-    _service: WeatherServiceProto = tanjun.injected(type=WeatherServiceProto),
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
 ):
     await ctx.respond(embed=await _service.weather_map(location, zoom, layer))
 
@@ -92,7 +93,7 @@ async def weather_map(
 async def pollution_data(
     ctx: tanjun.SlashContext,
     location: str,
-    _service: WeatherServiceProto = tanjun.injected(type=WeatherServiceProto),
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
 ):
     await ctx.respond(embed=await _service.current_pollution(location))
 
@@ -103,7 +104,7 @@ async def pollution_data(
 async def radar(
     ctx: tanjun.SlashContext,
     location: str,
-    _service: WeatherServiceProto = tanjun.injected(type=WeatherServiceProto),
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
 ):
     await ctx.respond(embed=await _service.radar_map(location))
 

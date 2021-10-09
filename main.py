@@ -22,7 +22,6 @@ import dotenv
 
 from bot import LoggingHandler
 from libs.astronomy import AstronomyAPI
-from module_services.bot import BotService
 
 dotenv.load_dotenv()
 
@@ -32,8 +31,10 @@ if os.getenv("CUSTOM_LOGGER") == "1":
 
 import hikari  # noqa E402
 import tanjun  # noqa E402
-from bot.proto import WeatherServiceProto, DatabaseProto  # noqa 402
-from bot.impl import WeatherServiceImpl, DatabaseImpl  # noqa E402
+from bot.proto import DatabaseProto  # noqa 402
+from bot.impl import DatabaseImpl  # noqa E402
+from module_services.bot import EmbedCreator  # noqa E402
+from module_services.weather import WeatherAPI  # noqa E402
 
 db = DatabaseImpl.connect()
 
@@ -43,12 +44,12 @@ client = (
         bot, set_global_commands=os.getenv("GUILD") or False
     )  # noqa E131
     .set_type_dependency(
-        WeatherServiceProto,
-        WeatherServiceImpl(),
+        WeatherAPI,
+        WeatherAPI(),
     )
     .set_type_dependency(DatabaseProto, db)
     .set_type_dependency(AstronomyAPI, AstronomyAPI())
-    .set_type_dependency(BotService, BotService())
+    .set_type_dependency(EmbedCreator, EmbedCreator())
     .load_modules(*Path("./modules").glob("**/*.py"))
 )
 

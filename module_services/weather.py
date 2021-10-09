@@ -10,14 +10,14 @@ from bot.proto.database import UserSettings
 from libs.maptiler import MapTilerAPI
 from libs.openweathermap import OpenWeatherMapAPI
 from libs.weather_gov import WeatherGovAPI
-from module_services.bot import BotService
+from module_services.bot import EmbedCreator
 from module_services.geocoding import GeocodingService
 
 
 # noinspection PyMethodMayBeStatic
-class WeatherServiceImpl(BotService, GeocodingService):
+class WeatherAPI(EmbedCreator, GeocodingService):
     def __init__(self):
-        super(WeatherServiceImpl, self).__init__()
+        super(WeatherAPI, self).__init__()
         self.owm_api = OpenWeatherMapAPI(os.getenv("OWM"))
         self.weather_gov_api = WeatherGovAPI()
         self.map_api = MapTilerAPI(os.getenv("MAPTILER"))
@@ -101,7 +101,7 @@ class WeatherServiceImpl(BotService, GeocodingService):
                 title="Lookup error",
                 description="No data was available for the specified location",
             )
-        conditions = await self.owm_api.get_current_conditions(lat, lon)
+        conditions, _ = await self.owm_api.get_current_conditions(lat, lon)
         if data.radar_station:
             embed = self.ok_embed(
                 title=f"**Radar for {conditions.city_name}, {conditions.sys.country}**",
@@ -190,3 +190,5 @@ class WeatherServiceImpl(BotService, GeocodingService):
         return hikari.Embed(title=f"{layer.title()} Map for {city}").set_image(
             await self.raw_weather_map(city, zoom, layer)
         )
+
+    MAP_TYPES = {"clouds", "precipitation", "pressure", "wind", "temperature"}
