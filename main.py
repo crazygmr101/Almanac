@@ -22,6 +22,7 @@ import dotenv
 
 from bot import LoggingHandler
 from libs.astronomy import AstronomyAPI
+from module_services.bot import BotService
 
 dotenv.load_dotenv()
 
@@ -47,6 +48,7 @@ client = (
     )
     .set_type_dependency(DatabaseProto, db)
     .set_type_dependency(AstronomyAPI, AstronomyAPI())
+    .set_type_dependency(BotService, BotService())
     .load_modules(*Path("./modules").glob("**/*.py"))
 )
 

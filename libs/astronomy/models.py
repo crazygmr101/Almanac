@@ -41,3 +41,28 @@ class SeasonTimes:
             Tuple[str, str, str, str],
             tuple(time.strftime("%b %d  %H:%M") for time in self.times),
         )
+
+
+@dataclass(frozen=True)
+class MoonPhase:
+    degrees: float
+
+    @property
+    def emoji(self) -> str:
+        return "🌑🌘🌗🌖🌕🌔🌓🌒"[round(self.degrees / 45) % 8]
+
+    @property
+    def name(self) -> str:
+        return [
+            "New Moon",
+            "Waxing Crescent",
+            "First Quarter",
+            "Waxing Gibbous",
+            "Full Moon",
+            "Waning Gibbous",
+            "Third Quarter",
+            "Waning Crescent",
+        ][round(self.degrees / 45) % 8]
+
+    def __str__(self) -> str:
+        return f"{self.emoji} {self.name} ({self.degrees:.1f}°)"

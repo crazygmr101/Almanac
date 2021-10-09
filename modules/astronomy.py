@@ -14,10 +14,13 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import hikari
+from datetime import datetime
+
 import tanjun
 
+from bot.converters import parse_datetime
 from libs.astronomy import AstronomyAPI
+from module_services.bot import BotService
 
 component = tanjun.Component()
 astro_group = component.with_slash_command(
@@ -32,9 +35,10 @@ async def seasons(
     ctx: tanjun.SlashContext,
     year: int,
     _api: AstronomyAPI = tanjun.injected(type=AstronomyAPI),
+    _bot: BotService = tanjun.injected(type=BotService),
 ):
     await ctx.respond(
-        embed=hikari.Embed(
+        embed=_bot.ok_embed(
             title=f"Seasons for {year}",
             description="\n".join(
                 f"**{season}**: {time}"
@@ -48,6 +52,25 @@ async def seasons(
                     _api.seasons(year).formatted_times,
                 )
             ),
+        )
+    )
+
+
+@astro_group.with_command
+@tanjun.with_str_slash_option(
+    "date", "The date to look up", converters=(parse_datetime,)
+)
+@tanjun.as_slash_command("date", "Data about the date")
+async def date_data(
+    ctx: tanjun.SlashContext,
+    date: datetime,
+    _api: AstronomyAPI = tanjun.injected(type=AstronomyAPI),
+    _bot: BotService = tanjun.injected(type=BotService),
+):
+    await ctx.respond(
+        embed=_bot.ok_embed(
+            title=f"Data for {date.strftime('%b %d %Y')}",
+            description=f"**Moon**: {_api.moon_phase(date.year, date.month, date.day)}",
         )
     )
 

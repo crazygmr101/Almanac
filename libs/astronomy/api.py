@@ -20,7 +20,7 @@ import pytz
 from skyfield import api, almanac
 from skyfield.timelib import Time
 
-from .models import SeasonTimes
+from .models import SeasonTimes, MoonPhase
 
 
 class AstronomyAPI:
@@ -37,3 +37,10 @@ class AstronomyAPI:
         )
 
         return SeasonTimes(*(time.astimezone(pytz.utc) for time in t))
+
+    def moon_phase(self, year: int, month: int, day: int) -> MoonPhase:
+        return MoonPhase(
+            almanac.moon_phase(
+                self.eph, self.timescale.utc(year, month, day)
+            ).degrees
+        )
