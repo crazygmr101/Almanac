@@ -21,7 +21,7 @@ import tanjun
 from bot.converters import parse_datetime
 from libs.astronomy import AstronomyAPI
 from libs.nasa import NasaAPI, APOD
-from module_services.bot import EmbedCreator
+from module_services.bot import BotUtils
 
 component = tanjun.Component()
 astro_group = component.with_slash_command(
@@ -36,7 +36,7 @@ async def seasons(
     ctx: tanjun.SlashContext,
     year: int,
     _api: AstronomyAPI = tanjun.injected(type=AstronomyAPI),
-    _bot: EmbedCreator = tanjun.injected(type=EmbedCreator),
+    _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     await ctx.respond(
         embed=_bot.ok_embed(
@@ -66,7 +66,7 @@ async def date_data(
     ctx: tanjun.SlashContext,
     date: datetime,
     _api: NasaAPI = tanjun.injected(type=NasaAPI),
-    _bot: EmbedCreator = tanjun.injected(type=EmbedCreator),
+    _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     date = date or datetime.now()
     apod: APOD = await _api.apod(date)
@@ -90,7 +90,7 @@ async def date_data(
     ctx: tanjun.SlashContext,
     date: datetime,
     _api: AstronomyAPI = tanjun.injected(type=AstronomyAPI),
-    _bot: EmbedCreator = tanjun.injected(type=EmbedCreator),
+    _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     await ctx.respond(
         embed=_bot.ok_embed(

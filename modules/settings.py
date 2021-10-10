@@ -18,6 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import tanjun
 
 from bot.proto import DatabaseProto
+from module_services.bot import BotUtils
 
 component = tanjun.Component()
 settings_group = component.with_slash_command(
@@ -39,9 +40,12 @@ async def set_setting(
     ctx: tanjun.SlashContext,
     setting: str,
     _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
+    _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     _db.set_setting(ctx.author.id, "unit_system", setting[0])
-    await ctx.respond(_db.ok_embed("Success", f"Unit system set to {setting}"))
+    await ctx.respond(
+        _bot.ok_embed("Success", f"Unit system set to {setting}")
+    )
 
 
 @settings_group.with_command
@@ -49,10 +53,11 @@ async def set_setting(
 async def list_settings(
     ctx: tanjun.SlashContext,
     _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
+    _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     await ctx.respond(
         content=None,
-        embed=_db.ok_embed(
+        embed=_bot.ok_embed(
             "Settings list",
             "\n".join(
                 f"**{name}** - {value}"

@@ -10,12 +10,12 @@ from bot.proto.database import UserSettings
 from libs.maptiler import MapTilerAPI
 from libs.openweathermap import OpenWeatherMapAPI
 from libs.weather_gov import WeatherGovAPI
-from module_services.bot import EmbedCreator
+from module_services.bot import BotUtils
 from module_services.geocoding import Geocoder
 
 
 # noinspection PyMethodMayBeStatic
-class WeatherAPI(EmbedCreator, Geocoder):
+class WeatherAPI(BotUtils, Geocoder):
     def __init__(self):
         super(WeatherAPI, self).__init__()
         self.owm_api = OpenWeatherMapAPI(os.getenv("OWM"))

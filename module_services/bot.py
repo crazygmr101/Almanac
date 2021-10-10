@@ -18,7 +18,7 @@ from hikari import Embed
 
 
 # noinspection PyMethodMayBeStatic
-class EmbedCreator:
+class BotUtils:
     def error_embed(self, title: str, description: str = None):
         return Embed(title=title, description=description, color=0x880000)
 

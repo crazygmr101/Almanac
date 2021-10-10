@@ -18,10 +18,10 @@ import discord
 from discord.ext import commands
 
 from bot import AlmanacContext, AlmanacCommand
-from module_services.bot import EmbedCreator
+from module_services.bot import BotUtils
 
 
-class HelpService(EmbedCreator):
+class HelpService(BotUtils):
     def __init__(self):
         super(HelpService, self).__init__()
 
