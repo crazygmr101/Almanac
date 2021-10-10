@@ -14,30 +14,10 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from discord.ext.commands import CommandError
+from datetime import datetime
 
-from bot import AlmanacContext
+import dateparser
 
 
-class MapLayerType:
-    TYPES = {
-        "clouds": ["cloud", "cloudcover"],
-        "precipitation": ["precipitation", "precip"],
-        "pressure": ["psi", "pressure"],
-        "wind": ["windspeed", "wind"],
-        "temperature": ["heat", "temp", "temperature"]
-    }
-
-    def __init__(self, layer_type: str):
-        self.layer_type = layer_type
-
-    def __str__(self):
-        return f"{self.layer_type}_new"
-
-    @classmethod
-    async def convert(cls, ctx: AlmanacContext, argument: str):
-        argument = argument.lower()
-        for typ, aliases in cls.TYPES.items():
-            if argument in aliases:
-                return cls(typ)
-        raise CommandError(f"`{argument}` is an invalid map layer. Valid layers are {', '.join(TYPES.keys())} ")
+def parse_datetime(value: str) -> datetime:
+    return dateparser.parse(value)

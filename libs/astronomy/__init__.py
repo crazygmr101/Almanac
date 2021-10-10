@@ -14,36 +14,5 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from discord.ext import commands
-
-from bot import AlmanacContext, Almanac, AlmanacCommand
-from module_services import HelpService
-
-
-class HelpModule(commands.Cog, HelpService):
-    def __init__(self, bot: Almanac):
-        super(HelpModule, self).__init__()
-        self.bot = bot
-
-    @commands.group()
-    async def help(self, ctx: AlmanacContext):
-        if ctx.invoked_subcommand:
-            return
-        command = " ".join(ctx.message.content.split(" ")[1:])
-        if not command.strip():
-            await ctx.send(embed=await self.get_command_list(ctx))
-        else:
-            await ctx.send(embed=await self.get_help_for_command(ctx, command))
-
-    @help.command(
-        cls=AlmanacCommand,
-        brief="Show the command list",
-        usage="`;help commands`",
-        arg_list={}
-    )
-    async def commands(self, ctx: AlmanacContext):
-        await ctx.send(embed=await self.get_command_list(ctx))
-
-
-def setup(bot: Almanac):
-    bot.add_cog(HelpModule(bot))
+from .api import *
+from .models import *

@@ -1,7 +1,19 @@
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Dict, Union
 
 from dataclasses_json import dataclass_json, config
+
+from bot.proto.database import UserSettings
+
+
+@dataclass_json
+@dataclass
+class GenericResponse:
+    _status_code: Union[str, int] = field(metadata=config(field_name="cod"))
+
+    @property
+    def status_code(self) -> int:
+        return int(self._status_code)
 
 
 @dataclass_json
@@ -13,25 +25,57 @@ class Condition:
     icon: str
 
 
+class Temperature(float):
+    def convert(self, settings: UserSettings) -> "Temperature":
+        return self if settings.imperial else (self - 32) / 1.8
+
+
+class Speed(float):
+    def convert(self, settings: UserSettings) -> "Speed":
+        return self if settings.imperial else self * 1.60934
+
+
+class Distance(float):
+    def convert(self, settings: UserSettings) -> "Distance":
+        return self if settings.imperial else self * 1.60934
+
+
 @dataclass_json
 @dataclass
 class DetailedCondition:
-    temp: float
-    feels_like: float
+    _temp: float = field(metadata=config(field_name="temp"))
+    _feels_like: float = field(metadata=config(field_name="feels_like"))
     temp_min: float
     temp_max: float
     pressure: float
     humidity: int
     sea_level: Optional[int] = None
     grnd_level: Optional[int] = None
+    description: Optional[str] = None
+
+    @property
+    def temp(self) -> Temperature:
+        return Temperature(self._temp)
+
+    @property
+    def feels_like(self) -> Temperature:
+        return Temperature(self._feels_like)
 
 
 @dataclass_json
 @dataclass
 class Wind:
-    speed: float
+    _speed: float = field(metadata=config(field_name="speed"))
     direction: int = field(metadata=config(field_name="deg"))
-    gust: Optional[float] = None
+    _gust: Optional[float] = field(metadata=config(field_name="gust"))
+
+    @property
+    def speed(self) -> Speed:
+        return Speed(self._speed)
+
+    @property
+    def gust(self) -> Optional[Speed]:
+        return Speed(self._gust)
 
 
 @dataclass_json
@@ -43,8 +87,8 @@ class Clouds:
 @dataclass_json
 @dataclass
 class Precipitation:
-    one_hour: float = field(metadata=config(field_name="1h"))
-    three_hour: float = field(metadata=config(field_name="3h"))
+    one_hour: float = field(metadata=config(field_name="1h"), default=0)
+    three_hour: float = field(metadata=config(field_name="3h"), default=0)
 
 
 @dataclass_json
@@ -78,3 +122,78 @@ class CurrentConditionsResponse:
     city_name: int = field(metadata=config(field_name="name"))
     rain: Optional[Precipitation] = None
     snow: Optional[Precipitation] = None
+
+
+@dataclass_json
+@dataclass
+class PollutionIndexResponseMain:
+    aqi: int
+
+    def __str__(self) -> str:
+        return ("Good", "Fair", "Moderate", "Poor", "Very Poor")[self.aqi]
+
+
+@dataclass_json
+@dataclass
+class PollutionIndexResponseComponents:
+    co: float
+    no: float
+    no2: float
+    o3: float
+    so2: float
+    pm2_5: float
+    pm10: float
+    nh3: float
+
+    @property
+    def levels(self) -> Dict[str, Optional[float]]:
+        return {
+            pretty_name: float(self.__dict__[field_name])
+            for pretty_name, field_name in {
+                "CO": "co",
+                "NO": "no",
+                "NO₂": "no2",
+                "O₃": "o3",
+                "SO₂": "so2",
+                "Fine Particles": "pm2_5",
+                "Coarse Particles": "pm10",
+                "NH₃": "nh3",
+            }.items()
+        }
+
+
+@dataclass_json
+@dataclass
+class PollutionIndexResponseData:
+    dt: int
+    main: PollutionIndexResponseMain
+    components: PollutionIndexResponseComponents
+
+
+@dataclass_json
+@dataclass
+class CurrentPollutionIndexResponse:
+    coord: Coordinates
+    list: List[PollutionIndexResponseData]
+
+    @property
+    def data(self) -> PollutionIndexResponseData:
+        return self.list[0]
+
+
+@dataclass_json
+@dataclass
+class ForecastResponseData:
+    dt: int
+    main: DetailedCondition
+    clouds: Clouds
+    wind: Wind
+    precip_chance: float = field(metadata=config(field_name="pop"))
+    rain: Optional[Precipitation] = None
+    snow: Optional[Precipitation] = None
+
+
+@dataclass_json
+@dataclass
+class ForecastResponse(GenericResponse):
+    list: List[ForecastResponseData] = field(default_factory=lambda: [])

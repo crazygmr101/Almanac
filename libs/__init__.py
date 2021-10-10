@@ -14,33 +14,3 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import json
-
-import aiohttp
-from expiringdict import ExpiringDict
-from yarl import URL
-
-from libs.googlemaps.models import GeocodeResponse
-
-
-class GoogleMapsAPI:
-    def __init__(self, token):
-        self.token = token
-        self._cache = ExpiringDict(10000, 60 * 60 * 12)  # 12h
-
-    async def geocode(self, location: str) -> GeocodeResponse:
-        res = self._cache.get(location, None)
-        if res is not None:
-            return res
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(
-                url=URL.build(
-                    host="maps.googleapis.com",
-                    scheme="https",
-                    path="/maps/api/geocode/json",
-                    query={"address": location, "key": self.token},
-                )
-            ) as resp:
-                res = GeocodeResponse.from_json(await resp.read())
-                self._cache[location] = res
-                return res

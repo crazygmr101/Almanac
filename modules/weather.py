@@ -14,97 +14,132 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from typing import Optional
 
-from discord.ext import commands
+import tanjun
 
-from bot import Almanac, AlmanacContext, AlmanacCommand
-from bot.converters import MapLayerType
-from module_services import WeatherService
+from bot.proto import DatabaseProto
+from libs.openweathermap import CityNotFoundError
+from module_services.weather import WeatherAPI
+
+component = tanjun.Component()
+weather_group = component.with_slash_command(
+    tanjun.SlashCommandGroup("weather", "Weather commands")
+)
+weather_nws_group = weather_group.with_command(
+    tanjun.SlashCommandGroup("nws", "Get MWS data")
+)
+hooks = tanjun.SlashHooks()
 
 
-class WeatherModule(commands.Cog, WeatherService):
+@hooks.with_on_error
+async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
+    ctx.set_ephemeral_default(True)
+    if isinstance(error, CityNotFoundError):
+        await ctx.respond("City not found")
 
-    def __init__(self, bot: Almanac):
-        super(WeatherModule, self).__init__()
-        self.bot = bot
 
-    @commands.group(
-        brief="Weather lookups"
+@hooks.add_to_command
+@weather_group.with_command
+@tanjun.with_str_slash_option("location", "Location to look up")
+@tanjun.as_slash_command("forecast", "Forecast for a location")
+async def current(
+    ctx: tanjun.SlashContext,
+    location: str,
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+    _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
+):
+    await ctx.respond(
+        embed=await _service.current_conditions(
+            location, _db.get_settings(ctx.author.id)
+        )
     )
-    async def weather(self, ctx: AlmanacContext):
-        if not ctx.subcommand_passed:
-            await ctx.send(embed=self.error_embed(
-                title="Must pass a subcommand",
-                description="\n".join(
-                    f"`nws {cmd.name}` - {cmd.brief}"
-                    for cmd in self.weather.walk_commands()
-                    if isinstance(cmd, commands.Command)
-                )
-            ))
 
-    @weather.command(
-        cls=AlmanacCommand,
-        brief="Show the current conditions for a city",
-        arg_list={
-            "location": [False, str, "Location to look up"]
-        }
+
+# TODO this needs to be done
+# @hooks.add_to_command
+# @weather_group.with_command
+# @tanjun.with_str_slash_option("location", "Location to look up")
+# @tanjun.as_slash_command("current", "Current weather at a location")
+async def forecast(
+    ctx: tanjun.SlashContext,
+    location: str,
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+    _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
+):
+    await ctx.respond(
+        embed=await _service.forecast(
+            location, _db.get_settings(ctx.author.id)
+        )
     )
-    async def current(self, ctx: AlmanacContext, *, location: str):
-        await ctx.send(embed=await self.current_conditions(location))
-
-    @commands.group(
-        brief="NWS lookups"
-    )
-    async def nws(self, ctx: AlmanacContext):
-        if not ctx.subcommand_passed:
-            await ctx.send(embed=self.error_embed(
-                title="Must pass a subcommand",
-                description="\n".join(
-                    f"`nws {cmd.name}` - {cmd.brief}"
-                    for cmd in self.nws.walk_commands()
-                    if isinstance(cmd, commands.Command)
-                )
-            ))
-
-    @nws.command(
-        cls=AlmanacCommand,
-        brief="Lookup NWS point data for a lat/long",
-        arg_list={
-            "lat": [False, float, "Latitude of the location"],
-            "long": [False, float, "Longitude of the location"]
-        }
-    )
-    async def point(self, ctx: AlmanacContext, lat: float, long: float):
-        await ctx.send(embed=await self.point_data(lat, long))
-
-    @weather.command(
-        cls=AlmanacCommand,
-        brief="Look up a weather map for a city",
-        usage="`;map new york city, ny` - Look up a clouds map at zoom level 8\n"
-              "`;map 7 new york city` - Look up a clouds map at zoom level 7\n"
-              "`;map precip new york city` - Look up a precipitation map at default zoom",
-        arg_list={
-            "zoom": [True, int, "Zoom level from 1 to 16 - defaults to 8"],
-            "layer_type": [True, MapLayerType, "Map type: " + ", ".join(MapLayerType.TYPES) + "defaults to clouds"],
-            "location": [False, str, "Location to look up"]
-        }
-    )
-    async def map(self, ctx: AlmanacContext, zoom: Optional[int], layer_type: Optional[MapLayerType], *, location: str):
-        layer_type = layer_type.layer_type if layer_type else "clouds"
-        zoom = zoom or 8
-        await ctx.send(file=await self.weather_map(location, zoom, layer_type))
-
-    @weather.command(
-        cls=AlmanacCommand,
-        brief="Look up the local radar image for a city",
-        arg_list={
-            "location": [False, str, "Location to look up"]
-        }
-    )
-    async def radar(self, ctx: AlmanacContext, *, location: str):
-        await ctx.send(embed=await self.radar_map(location))
 
 
-def setup(bot: Almanac):
-    bot.add_cog(WeatherModule(bot))
+@weather_nws_group.with_command
+@tanjun.with_float_slash_option("latitude", "Latitude of the location")
+@tanjun.with_float_slash_option("longitude", "Longitude of the location")
+@tanjun.as_slash_command("point", "Lookup NWS point data for a lat/long")
+async def point(
+    ctx: tanjun.SlashContext,
+    latitude: float,
+    longitude: float,
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+):
+    await ctx.respond(embed=await _service.point_data(latitude, longitude))
+
+
+@hooks.add_to_command
+@weather_group.with_command
+@tanjun.with_int_slash_option(
+    "zoom",
+    "Zoom level",
+    choices=[(f"Level {n}", n) for n in range(1, 17)],
+    default=8,
+)
+@tanjun.with_str_slash_option(
+    "layer",
+    "Map type to look up",
+    default="clouds",
+    choices=[(typ.title(), typ) for typ in WeatherAPI.MAP_TYPES],
+)
+@tanjun.with_str_slash_option("location", "Location to look up")
+@tanjun.as_slash_command(
+    "weather-map", "Look up the weather map for a location", sort_options=True
+)
+async def weather_map(
+    ctx: tanjun.SlashContext,
+    zoom: int,
+    layer: str,
+    location: str,
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+):
+    await ctx.respond(embed=await _service.weather_map(location, zoom, layer))
+
+
+@hooks.add_to_command
+@weather_group.with_command
+@tanjun.with_str_slash_option("location", "Location to look up")
+@tanjun.as_slash_command(
+    "pollution", "Look up detailed pollution data for a location"
+)
+async def pollution_data(
+    ctx: tanjun.SlashContext,
+    location: str,
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+):
+    await ctx.respond(embed=await _service.current_pollution(location))
+
+
+@hooks.add_to_command
+@weather_group.with_command
+@tanjun.with_str_slash_option("location", "Location to look up")
+@tanjun.as_slash_command("radar", "Look up the radar for a location")
+async def radar(
+    ctx: tanjun.SlashContext,
+    location: str,
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+):
+    await ctx.respond(embed=await _service.radar_map(location))
+
+
+@tanjun.as_loader
+def load_component(client: tanjun.Client) -> None:
+    client.add_component(component.copy())

@@ -14,33 +14,33 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import json
+from typing import Iterable
 
-import aiohttp
-from expiringdict import ExpiringDict
-from yarl import URL
+import pytz
+from skyfield import api, almanac
+from skyfield.timelib import Time
 
-from libs.googlemaps.models import GeocodeResponse
+from .models import SeasonTimes, MoonPhase
 
 
-class GoogleMapsAPI:
-    def __init__(self, token):
-        self.token = token
-        self._cache = ExpiringDict(10000, 60 * 60 * 12)  # 12h
+class AstronomyAPI:
+    def __init__(self):
+        self.eph = api.load_file("de421.bsp")
+        self.timescale = api.load.timescale()
 
-    async def geocode(self, location: str) -> GeocodeResponse:
-        res = self._cache.get(location, None)
-        if res is not None:
-            return res
-        async with aiohttp.ClientSession() as sess:
-            async with sess.get(
-                url=URL.build(
-                    host="maps.googleapis.com",
-                    scheme="https",
-                    path="/maps/api/geocode/json",
-                    query={"address": location, "key": self.token},
-                )
-            ) as resp:
-                res = GeocodeResponse.from_json(await resp.read())
-                self._cache[location] = res
-                return res
+    def seasons(self, year: int) -> SeasonTimes:
+        t: Iterable[Time]
+        t, _ = almanac.find_discrete(
+            self.timescale.utc(year, 1, 1),
+            self.timescale.utc(year, 12, 31),
+            almanac.seasons(self.eph),
+        )
+
+        return SeasonTimes(*(time.astimezone(pytz.utc) for time in t))
+
+    def moon_phase(self, year: int, month: int, day: int) -> MoonPhase:
+        return MoonPhase(
+            almanac.moon_phase(
+                self.eph, self.timescale.utc(year, month, day)
+            ).degrees
+        )

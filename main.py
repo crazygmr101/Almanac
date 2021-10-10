@@ -14,10 +14,47 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import logging
+import os
+from pathlib import Path
 
-from bot import Almanac
+import dotenv
 
-bot = Almanac()
-bot.load_modules()
+from bot import LoggingHandler
+from libs.astronomy import AstronomyAPI
+from libs.nasa import NasaAPI
+from module_services.geocoding import Geocoder
+
+dotenv.load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+if os.getenv("CUSTOM_LOGGER") == "1":
+    logging.setLoggerClass(LoggingHandler)
+
+import hikari  # noqa E402
+import tanjun  # noqa E402
+from bot.proto import DatabaseProto  # noqa 402
+from bot.impl import DatabaseImpl  # noqa E402
+from module_services.bot import EmbedCreator  # noqa E402
+from module_services.weather import WeatherAPI  # noqa E402
+
+db = DatabaseImpl.connect()
+
+bot = hikari.GatewayBot(token=os.getenv("TOKEN"))
+client = (
+    tanjun.Client.from_gateway_bot(
+        bot, set_global_commands=os.getenv("GUILD") or False
+    )  # noqa E131
+    .set_type_dependency(
+        WeatherAPI,
+        WeatherAPI(),
+    )
+    .set_type_dependency(DatabaseProto, db)
+    .set_type_dependency(AstronomyAPI, AstronomyAPI())
+    .set_type_dependency(Geocoder, Geocoder())
+    .set_type_dependency(NasaAPI, NasaAPI())
+    .set_type_dependency(EmbedCreator, EmbedCreator())
+    .load_modules(*Path("./modules").glob("**/*.py"))
+)
 
 bot.run()

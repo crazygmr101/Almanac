@@ -19,10 +19,11 @@ import re
 from typing import Tuple, Optional
 
 from libs.googlemaps import GoogleMapsAPI
+from libs.openweathermap import CityNotFoundError
 
 
 # noinspection PyMethodMayBeStatic
-class GeocodingService:
+class Geocoder:
     def __init__(self):
         self.gmaps_api = GoogleMapsAPI(os.getenv("GMAPS"))
 
@@ -33,8 +34,15 @@ class GeocodingService:
             return res
 
         # try to geocode with google maps
-        res = (await self.gmaps_api.geocode(location)).results[0].geometry.location
-        return res.lat, res.lon
+        try:
+            res = (
+                (await self.gmaps_api.geocode(location))
+                .results[0]
+                .geometry.location
+            )
+            return res.lat, res.lon
+        except IndexError:
+            raise CityNotFoundError
 
     def try_parse_lat_long(self, value: str) -> Optional[Tuple[float, float]]:
         value = value.replace("°", "")
@@ -43,11 +51,15 @@ class GeocodingService:
             return None
         lat, lon = tuple(value.split(" "))
         try:
-            lat = (-1. if lat.endswith("s") else 1.) * float(re.sub("[ns]", "", lat))
+            lat = (-1.0 if lat.endswith("s") else 1.0) * float(
+                re.sub("[ns]", "", lat)
+            )
         except ValueError:
             return None
         try:
-            lon = (-1. if lon.endswith("w") else 1.) * float(re.sub("[ew]", "", lon))
+            lon = (-1.0 if lon.endswith("w") else 1.0) * float(
+                re.sub("[ew]", "", lon)
+            )
         except ValueError:
             return None
         return lat, lon

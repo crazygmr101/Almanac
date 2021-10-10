@@ -25,16 +25,22 @@ from libs.weather_gov.models import WeatherGovPoint
 # noinspection PyMethodMayBeStatic
 class WeatherGovAPI:
     def __init__(self):
-        self._cache = ExpiringDict(max_len=1000, max_age_seconds=60*60*12)  # expire in 12h
+        self._cache = ExpiringDict(
+            max_len=1000, max_age_seconds=60 * 60 * 12
+        )  # expire in 12h
 
-    async def lookup_point(self, latitude: float, longitude: float) -> WeatherGovPoint:
+    async def lookup_point(
+        self, latitude: float, longitude: float
+    ) -> WeatherGovPoint:
         latitude = round(latitude, 3)
         longitude = round(longitude, 3)
         res = self._cache.get((latitude, longitude), None)
         if res is not None:
             return res
         async with aiohttp.ClientSession() as sess:
-            async with sess.get(f"https://api.weather.gov/points/{latitude},{longitude}") as resp:
+            async with sess.get(
+                f"https://api.weather.gov/points/{latitude},{longitude}"
+            ) as resp:
                 resp.raise_for_status()  # TODO intelligent errors here
                 content = json.dumps(await resp.json())
                 res = WeatherGovPoint.from_json(content)
