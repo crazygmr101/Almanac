@@ -96,7 +96,10 @@ async def point(
 @tanjun.with_int_slash_option(
     "zoom",
     "Zoom level",
-    choices=[(f"Level {n}", n) for n in range(1, 17)],
+    choices=[
+        (f"Level {n}" + (" - Default" if n == 8 else ""), n)
+        for n in range(1, 17)
+    ],
     default=8,
 )
 @tanjun.with_str_slash_option(
