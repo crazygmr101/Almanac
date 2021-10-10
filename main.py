@@ -54,6 +54,7 @@ client = (
     .set_type_dependency(Geocoder, Geocoder())
     .set_type_dependency(NasaAPI, NasaAPI())
     .set_type_dependency(BotUtils, BotUtils())
+    .set_auto_defer_after(0.1)
     .load_modules(*Path("./modules").glob("**/*.py"))
 )
 

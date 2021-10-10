@@ -16,7 +16,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 from datetime import timedelta
 from io import BytesIO
-from typing import Tuple, Dict
 
 import aiohttp
 from PIL import Image
@@ -29,12 +28,14 @@ from libs.helpers import get_tiles, assemble_mosaic
 class MapTilerAPI:
     def __init__(self, token: str):
         self.token = token
-        self.disk_cache = DiskCache(
-            "/tmp/almanac/map-tiler/", timedelta(days=7)
+        self.satellite_disk_cache = DiskCache(
+            "/tmp/almanac/map-tiler", timedelta(days=7)
         )
 
-    async def _map_tile(self, x: int, y: int, zoom: int) -> Image.Image:
-        resp = self.disk_cache.get(f"/{zoom}/{x}/{y}.jpg")
+    async def _map_tile(
+        self, x: int, y: int, zoom: int, path: str, ext: str
+    ) -> Image.Image:
+        resp = self.satellite_disk_cache.get(f"{path}/{zoom}/{x}/{y}.jpg")
         buf = BytesIO()
         if resp is not None:
             buf.write(resp)
@@ -45,16 +46,19 @@ class MapTilerAPI:
                     url=URL.build(
                         scheme="https",
                         host="api.maptiler.com",
-                        path=f"/maps/hybrid/256/{zoom}/{x}/{y}.jpg",
+                        path=f"{path}/{zoom}/{x}/{y}.{ext}",
                         query={"key": self.token},
                     ),
                     headers={
-                        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"  # noqa e501
+                        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/91.0.4472.114 Safari/537.36"
                     },
                 ) as resp:
                     buf.write(await resp.read())
             buf.seek(0)
-            self.disk_cache.put(f"/{zoom}/{x}/{y}.jpg", buf.read())
+            self.satellite_disk_cache.put(
+                f"{path}/{zoom}/{x}/{y}.{ext}", buf.read()
+            )
             buf.seek(0)
         img: Image.Image = Image.open(buf)
         img.load()
@@ -65,8 +69,10 @@ class MapTilerAPI:
         self, lat: float, lon: float, zoom: int
     ) -> Image.Image:
         tiles, location = get_tiles(lat, lon, zoom)
-        images = [
-            await self._map_tile(tile[0], tile[1], zoom)
+        satellite_images = [
+            await self._map_tile(
+                tile[0], tile[1], zoom, "/maps/hybrid/256", "png"
+            )
             for tile in [
                 (tiles[0], tiles[1]),
                 (tiles[0], tiles[3]),
@@ -74,4 +80,17 @@ class MapTilerAPI:
                 (tiles[2], tiles[3]),
             ]
         ]
-        return assemble_mosaic(images, location)
+        hillshade_images = [
+            await self._map_tile(
+                tile[0], tile[1], zoom, "/tiles/hillshades", "png"
+            )
+            for tile in [
+                (tiles[0], tiles[1]),
+                (tiles[0], tiles[3]),
+                (tiles[2], tiles[1]),
+                (tiles[2], tiles[3]),
+            ]
+        ]
+        satellite_assembled = assemble_mosaic(satellite_images, location)
+        hillshade_assembled = assemble_mosaic(hillshade_images, location)
+        return Image.alpha_composite(satellite_assembled, hillshade_assembled)
