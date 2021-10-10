@@ -31,6 +31,7 @@ from libs.openweathermap.errors import CityNotFoundError
 from libs.openweathermap.models import (
     CurrentConditionsResponse,
     CurrentPollutionIndexResponse,
+    ForecastResponse,
 )
 
 
@@ -55,6 +56,25 @@ class OpenWeatherMapAPI:
             path=path,
             query=kwargs,
         )
+
+    async def get_forecast(
+        self, latitude: float, longitude: float
+    ) -> ForecastResponse:
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(
+                url=self._route(
+                    "/data/2.5/forecast",
+                    lat=latitude,
+                    lon=longitude,
+                    units="imperial",
+                )
+            ) as resp:
+                forecast: ForecastResponse = ForecastResponse.from_json(
+                    await resp.read()
+                )
+                if forecast.status_code != 200:
+                    raise CityNotFoundError
+                return forecast
 
     async def get_current_weather(
         self, latitude: float, longitude: float

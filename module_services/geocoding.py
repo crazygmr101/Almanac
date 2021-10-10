@@ -19,6 +19,7 @@ import re
 from typing import Tuple, Optional
 
 from libs.googlemaps import GoogleMapsAPI
+from libs.openweathermap import CityNotFoundError
 
 
 # noinspection PyMethodMayBeStatic
@@ -33,12 +34,15 @@ class Geocoder:
             return res
 
         # try to geocode with google maps
-        res = (
-            (await self.gmaps_api.geocode(location))
-            .results[0]
-            .geometry.location
-        )
-        return res.lat, res.lon
+        try:
+            res = (
+                (await self.gmaps_api.geocode(location))
+                .results[0]
+                .geometry.location
+            )
+            return res.lat, res.lon
+        except IndexError:
+            raise CityNotFoundError
 
     def try_parse_lat_long(self, value: str) -> Optional[Tuple[float, float]]:
         value = value.replace("°", "")

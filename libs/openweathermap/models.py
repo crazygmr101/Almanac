@@ -1,9 +1,19 @@
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 
 from dataclasses_json import dataclass_json, config
 
 from bot.proto.database import UserSettings
+
+
+@dataclass_json
+@dataclass
+class GenericResponse:
+    _status_code: Union[str, int] = field(metadata=config(field_name="cod"))
+
+    @property
+    def status_code(self) -> int:
+        return int(self._status_code)
 
 
 @dataclass_json
@@ -41,6 +51,7 @@ class DetailedCondition:
     humidity: int
     sea_level: Optional[int] = None
     grnd_level: Optional[int] = None
+    description: Optional[str] = None
 
     @property
     def temp(self) -> Temperature:
@@ -76,8 +87,8 @@ class Clouds:
 @dataclass_json
 @dataclass
 class Precipitation:
-    one_hour: float = field(metadata=config(field_name="1h"))
-    three_hour: float = field(metadata=config(field_name="3h"))
+    one_hour: float = field(metadata=config(field_name="1h"), default=0)
+    three_hour: float = field(metadata=config(field_name="3h"), default=0)
 
 
 @dataclass_json
@@ -168,3 +179,21 @@ class CurrentPollutionIndexResponse:
     @property
     def data(self) -> PollutionIndexResponseData:
         return self.list[0]
+
+
+@dataclass_json
+@dataclass
+class ForecastResponseData:
+    dt: int
+    main: DetailedCondition
+    clouds: Clouds
+    wind: Wind
+    precip_chance: float = field(metadata=config(field_name="pop"))
+    rain: Optional[Precipitation] = None
+    snow: Optional[Precipitation] = None
+
+
+@dataclass_json
+@dataclass
+class ForecastResponse(GenericResponse):
+    list: List[ForecastResponseData] = field(default_factory=lambda: [])

@@ -18,6 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import tanjun
 
 from bot.proto import DatabaseProto
+from libs.openweathermap import CityNotFoundError
 from module_services.weather import WeatherAPI
 
 component = tanjun.Component()
@@ -27,11 +28,20 @@ weather_group = component.with_slash_command(
 weather_nws_group = weather_group.with_command(
     tanjun.SlashCommandGroup("nws", "Get MWS data")
 )
+hooks = tanjun.SlashHooks()
 
 
+@hooks.with_on_error
+async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
+    ctx.set_ephemeral_default(True)
+    if isinstance(error, CityNotFoundError):
+        await ctx.respond("City not found")
+
+
+@hooks.add_to_command
 @weather_group.with_command
 @tanjun.with_str_slash_option("location", "Location to look up")
-@tanjun.as_slash_command("current", "Current weather at a location")
+@tanjun.as_slash_command("forecast", "Forecast for a location")
 async def current(
     ctx: tanjun.SlashContext,
     location: str,
@@ -40,6 +50,24 @@ async def current(
 ):
     await ctx.respond(
         embed=await _service.current_conditions(
+            location, _db.get_settings(ctx.author.id)
+        )
+    )
+
+
+# TODO this needs to be done
+# @hooks.add_to_command
+# @weather_group.with_command
+# @tanjun.with_str_slash_option("location", "Location to look up")
+# @tanjun.as_slash_command("current", "Current weather at a location")
+async def forecast(
+    ctx: tanjun.SlashContext,
+    location: str,
+    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+    _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
+):
+    await ctx.respond(
+        embed=await _service.forecast(
             location, _db.get_settings(ctx.author.id)
         )
     )
@@ -58,6 +86,7 @@ async def point(
     await ctx.respond(embed=await _service.point_data(latitude, longitude))
 
 
+@hooks.add_to_command
 @weather_group.with_command
 @tanjun.with_int_slash_option(
     "zoom",
@@ -85,6 +114,7 @@ async def weather_map(
     await ctx.respond(embed=await _service.weather_map(location, zoom, layer))
 
 
+@hooks.add_to_command
 @weather_group.with_command
 @tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command(
@@ -98,6 +128,7 @@ async def pollution_data(
     await ctx.respond(embed=await _service.current_pollution(location))
 
 
+@hooks.add_to_command
 @weather_group.with_command
 @tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command("radar", "Look up the radar for a location")

@@ -37,6 +37,17 @@ class WeatherAPI(EmbedCreator, Geocoder):
             ),
         )
 
+    async def forecast(
+        self, city: str, settings: UserSettings
+    ) -> hikari.Embed:
+        # TODO actually finish this
+        lat, lon = await self.parse_location(city)
+        data = await self.owm_api.get_forecast(lat, lon)
+        return self.ok_embed(
+            title="a",
+            description=f"{data.list[0].main.temp.convert(settings)}",
+        )
+
     async def current_conditions(
         self, city: str, settings: UserSettings
     ) -> hikari.Embed:
