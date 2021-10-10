@@ -20,6 +20,7 @@ import tanjun
 
 from bot.converters import parse_datetime
 from libs.astronomy import AstronomyAPI
+from libs.nasa import NasaAPI, APOD
 from module_services.bot import EmbedCreator
 
 component = tanjun.Component()
@@ -54,6 +55,30 @@ async def seasons(
             ),
         )
     )
+
+
+@astro_group.with_command
+@tanjun.with_str_slash_option(
+    "date", "The date to look up", converters=(parse_datetime,), default=None
+)
+@tanjun.as_slash_command("apod", "Astronomy Picture of the Day")
+async def date_data(
+    ctx: tanjun.SlashContext,
+    date: datetime,
+    _api: NasaAPI = tanjun.injected(type=NasaAPI),
+    _bot: EmbedCreator = tanjun.injected(type=EmbedCreator),
+):
+    date = date or datetime.now()
+    apod: APOD = await _api.apod(date)
+    response_embed = _bot.ok_embed(
+        title=f"APOD for {date.strftime('%b %d %Y')}",
+        description=f"**{apod.title}**\n" f"{apod.explanation}",
+    )
+    if apod.media_type == "video":
+        response_embed.add_field("Video URL", apod.url)
+    else:
+        response_embed.set_image(apod.url)
+    await ctx.respond(embed=response_embed)
 
 
 @astro_group.with_command
