@@ -22,6 +22,7 @@ import dotenv
 
 from bot import LoggingHandler
 from libs.astronomy import AstronomyAPI
+from libs.nasa import NasaAPI
 from module_services.geocoding import Geocoder
 
 dotenv.load_dotenv()
@@ -51,6 +52,7 @@ client = (
     .set_type_dependency(DatabaseProto, db)
     .set_type_dependency(AstronomyAPI, AstronomyAPI())
     .set_type_dependency(Geocoder, Geocoder())
+    .set_type_dependency(NasaAPI, NasaAPI())
     .set_type_dependency(EmbedCreator, EmbedCreator())
     .load_modules(*Path("./modules").glob("**/*.py"))
 )
