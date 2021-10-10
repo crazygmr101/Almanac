@@ -21,6 +21,7 @@ import typing
 import mysql.connector
 
 from bot.proto.database import UserSettings
+from module_services.bot import EmbedCreator
 
 
 def connect_to_database(
@@ -31,7 +32,7 @@ def connect_to_database(
     )
 
 
-class DatabaseImpl:
+class DatabaseImpl(EmbedCreator):
     def __init__(self, connection: mysql.connector.MySQLConnection):
         self._conn = connection
         self._logger = logging.getLogger(__name__)
