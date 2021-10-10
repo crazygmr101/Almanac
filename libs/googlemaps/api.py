@@ -41,7 +41,6 @@ class GoogleMapsAPI:
                     query={"address": location, "key": self.token},
                 )
             ) as resp:
-                r = await resp.json()
-                res = GeocodeResponse.from_json(json.dumps(r))
+                res = GeocodeResponse.from_json(await resp.read())
                 self._cache[location] = res
                 return res
