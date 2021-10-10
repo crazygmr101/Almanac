@@ -34,7 +34,7 @@ class MapTilerAPI:
         )
 
     async def _map_tile(self, x: int, y: int, zoom: int) -> Image.Image:
-        resp = self.disk_cache.get(f"/{zoom}/{x}/{y}.png")
+        resp = self.disk_cache.get(f"/{zoom}/{x}/{y}.jpg")
         buf = BytesIO()
         if resp is not None:
             buf.write(resp)
@@ -45,7 +45,7 @@ class MapTilerAPI:
                     url=URL.build(
                         scheme="https",
                         host="api.maptiler.com",
-                        path=f"/maps/basic/256/{zoom}/{x}/{y}.png",
+                        path=f"/maps/hybrid/256/{zoom}/{x}/{y}.jpg",
                         query={"key": self.token},
                     ),
                     headers={
@@ -54,7 +54,7 @@ class MapTilerAPI:
                 ) as resp:
                     buf.write(await resp.read())
             buf.seek(0)
-            self.disk_cache.put(f"/{zoom}/{x}/{y}.png", buf.read())
+            self.disk_cache.put(f"/{zoom}/{x}/{y}.jpg", buf.read())
             buf.seek(0)
         img: Image.Image = Image.open(buf)
         img.load()
