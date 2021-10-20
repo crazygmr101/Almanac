@@ -46,7 +46,7 @@ async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
 @hooks.add_to_command
 @weather_group.with_command
 @tanjun.with_str_slash_option("location", "Location to look up")
-@tanjun.as_slash_command("forecast", "Forecast for a location")
+@tanjun.as_slash_command("current", "Forecast for a location")
 async def current(
     ctx: tanjun.SlashContext,
     location: str,
