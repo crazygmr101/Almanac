@@ -14,6 +14,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import asyncio
 import logging
 import os
 from pathlib import Path
@@ -57,5 +58,16 @@ client = (
     .set_auto_defer_after(0.1)
     .load_modules(*Path("./modules").glob("**/*.py"))
 )
+
+
+async def clear_commands():
+    async with hikari.RESTApp().acquire(
+        os.getenv("TOKEN"), token_type="Bot"
+    ) as rest:
+        async with tanjun.Client(rest) as rest_client:
+            await rest_client.clear_commands()
+
+
+asyncio.run(clear_commands())
 
 bot.run()
