@@ -15,10 +15,11 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import List, Union
 
 from dataclasses_json import dataclass_json, config
+
+from .convertables import Temperature, Clouds, Wind, Speed, Precipitation
 
 
 @dataclass_json
@@ -91,12 +92,41 @@ class _HourlyCondition:
 @dataclass_json
 @dataclass
 class _DailyTemperature:
-    day: float
-    min: float
-    max: float
-    night: float
-    eve: float
-    morn: float
+    _day: float = field(metadata=config(field_name="day"))
+
+    @property
+    def day(self) -> Temperature:
+        return Temperature(self._day)
+
+    _min: float = field(metadata=config(field_name="min"))
+
+    @property
+    def min(self) -> Temperature:
+        return Temperature(self._min)
+
+    _max: float = field(metadata=config(field_name="max"))
+
+    @property
+    def max(self) -> Temperature:
+        return Temperature(self._max)
+
+    _night: float = field(metadata=config(field_name="night"))
+
+    @property
+    def night(self) -> Temperature:
+        return Temperature(self._night)
+
+    _eve: float = field(metadata=config(field_name="eve"))
+
+    @property
+    def eve(self) -> Temperature:
+        return Temperature(self._eve)
+
+    _morn: float = field(metadata=config(field_name="morn"))
+
+    @property
+    def morn(self) -> Temperature:
+        return Temperature(self._morn)
 
 
 @dataclass_json
@@ -122,20 +152,46 @@ class _DailyCondition:
     pressure: int
     humidity: int
     dew_point: int
-    wind_speed: float
     wind_deg: int
-    clouds: int
-    pop: Union[int, float]
+
+    _pop: Union[int, float] = field(metadata=config(field_name="pop"))
+    _clouds: int = field(metadata=config(field_name="clouds"))
+
+    @property
+    def precip_percent(self) -> int:
+        return (
+            int(self._pop * 100) if isinstance(self._pop, float) else self._pop
+        )
+
+    @property
+    def clouds(self) -> Clouds:
+        return Clouds(self._clouds)
+
+    _wind_speed: float = field(metadata=config(field_name="wind_speed"))
+
+    @property
+    def wind_speed(self) -> Speed:
+        return Speed(self._wind_speed)
+
+    @property
+    def wind(self) -> Wind:
+        return Wind(self.wind_deg, self.wind_speed)
+
     _weather: List[_Weather] = field(metadata=config(field_name="weather"))
-    rain: float = field(default=0)  # mm
-    snow: float = field(default=0)  # mm
+    _rain: float = field(default=0, metadata=config(field_name="rain"))  # mm
+    _snow: float = field(default=0, metadata=config(field_name="snow"))  # mm
+
+    @property
+    def rain(self) -> Precipitation:
+        return Precipitation(self._rain)
+
+    @property
+    def snow(self) -> Precipitation:
+        return Precipitation(self._snow)
 
     @property
     def weather(self) -> _Weather:
         return self._weather[0]
-
-    def __str__(self) -> str:
-        return f"{datetime.fromtimestamp(self.dt).isoformat()} {self.temp.min}/{self.temp.max} {self.clouds}"
 
 
 @dataclass_json

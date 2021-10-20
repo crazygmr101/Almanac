@@ -14,5 +14,46 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from .onecall import OneCallAPIResponse
-from .convertables import Temperature, Speed, Distance, Clouds
+from typing import Union
+
+
+def cloud_coverage_label(coverage: int) -> str:
+    return (
+        "Clear"
+        if coverage < 12
+        else "Mostly Sunny"
+        if coverage < 40
+        else "Partly Cloudy"
+        if coverage < 65
+        else "Mostly Cloudy"
+        if coverage < 90
+        else "Overcast"
+    )
+
+
+def cloud_icon_url_for(icon: str) -> str:
+    return f"http://openweathermap.org/img/wn/{icon}@2x.png"
+
+
+def direction_for(deg: Union[int, float]):
+    # see https://gist.github.com/RobertSudwarts/acf8df23a16afdb5837f#gistcomment-3070256
+    dirs = [
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE",
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW",
+    ]
+    ix = round(deg / (360.0 / len(dirs)))
+    return dirs[ix % len(dirs)]
