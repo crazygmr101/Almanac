@@ -35,7 +35,7 @@ import hikari  # noqa E402
 import tanjun  # noqa E402
 from bot.proto import DatabaseProto  # noqa 402
 from bot.impl import DatabaseImpl  # noqa E402
-from module_services.bot import EmbedCreator  # noqa E402
+from module_services.bot import BotUtils  # noqa E402
 from module_services.weather import WeatherAPI  # noqa E402
 
 db = DatabaseImpl.connect()
@@ -53,7 +53,8 @@ client = (
     .set_type_dependency(AstronomyAPI, AstronomyAPI())
     .set_type_dependency(Geocoder, Geocoder())
     .set_type_dependency(NasaAPI, NasaAPI())
-    .set_type_dependency(EmbedCreator, EmbedCreator())
+    .set_type_dependency(BotUtils, BotUtils())
+    .set_auto_defer_after(0.1)
     .load_modules(*Path("./modules").glob("**/*.py"))
 )
 

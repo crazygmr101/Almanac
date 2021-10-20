@@ -10,12 +10,12 @@ from bot.proto.database import UserSettings
 from libs.maptiler import MapTilerAPI
 from libs.openweathermap import OpenWeatherMapAPI
 from libs.weather_gov import WeatherGovAPI
-from module_services.bot import EmbedCreator
+from module_services.bot import BotUtils
 from module_services.geocoding import Geocoder
 
 
 # noinspection PyMethodMayBeStatic
-class WeatherAPI(EmbedCreator, Geocoder):
+class WeatherAPI(BotUtils, Geocoder):
     def __init__(self):
         super(WeatherAPI, self).__init__()
         self.owm_api = OpenWeatherMapAPI(os.getenv("OWM"))
@@ -189,8 +189,11 @@ class WeatherAPI(EmbedCreator, Geocoder):
         lat, lon = await self.parse_location(city)
         buf = BytesIO()
         layer_img = await self.owm_api.radar_image(lat, lon, zoom, layer)
+        # make the layer a bit more transparent so we have bounds still
+        # TODO use a vector layer to put on top maybe..?
+        alpha = layer_img.split()[3].point(lambda i: i / 1.4)
         osm_img = await self.map_api.get_map_image(lat, lon, zoom)
-        osm_img.alpha_composite(layer_img)
+        osm_img.paste(layer_img, (0, 0), mask=alpha)
         osm_img.save(buf, format="png")
         buf.seek(0)
         return buf

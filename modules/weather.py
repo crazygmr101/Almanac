@@ -16,6 +16,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 """
 
 import tanjun
+from PIL import UnidentifiedImageError
 
 from bot.proto import DatabaseProto
 from libs.openweathermap import CityNotFoundError
@@ -36,6 +37,10 @@ async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
     ctx.set_ephemeral_default(True)
     if isinstance(error, CityNotFoundError):
         await ctx.respond("City not found")
+    if isinstance(error, UnidentifiedImageError):
+        await ctx.respond(
+            "This map doesn't seem to be available for this location"
+        )
 
 
 @hooks.add_to_command
@@ -91,7 +96,10 @@ async def point(
 @tanjun.with_int_slash_option(
     "zoom",
     "Zoom level",
-    choices=[(f"Level {n}", n) for n in range(1, 17)],
+    choices=[
+        (f"Level {n}" + (" - Default" if n == 8 else ""), n)
+        for n in range(1, 17)
+    ],
     default=8,
 )
 @tanjun.with_str_slash_option(

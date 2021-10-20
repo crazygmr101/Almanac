@@ -17,10 +17,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import typing
 from dataclasses import dataclass
 
-from module_services.bot import EmbedCreator
 
-
-class DatabaseProto(EmbedCreator):
+class DatabaseProto:
     def set_setting(self, user: int, setting: str, value: typing.Any):
         raise NotImplementedError
 
