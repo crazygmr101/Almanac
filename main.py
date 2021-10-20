@@ -43,7 +43,7 @@ db = DatabaseImpl.connect()
 bot = hikari.GatewayBot(token=os.getenv("TOKEN"))
 client = (
     tanjun.Client.from_gateway_bot(
-        bot, set_global_commands=os.getenv("GUILD") or False
+        bot, set_global_commands=os.getenv("GUILD") or True
     )  # noqa E131
     .set_type_dependency(
         WeatherAPI,
