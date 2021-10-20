@@ -68,6 +68,7 @@ async def clear_commands():
             await rest_client.clear_commands()
 
 
-asyncio.run(clear_commands())
+if os.getenv("CLEAR"):
+    asyncio.run(clear_commands())
 
 bot.run()

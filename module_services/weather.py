@@ -43,10 +43,23 @@ class WeatherAPI(BotUtils, Geocoder):
         # TODO actually finish this
         lat, lon = await self.parse_location(city)
         data = await self.owm_api.get_forecast(lat, lon)
-        return self.ok_embed(
-            title="a",
-            description=f"{data.list[0].main.temp.convert(settings)}",
+        embed = self.ok_embed(
+            title=f"Forecast for {city}",
+            description="\n".join(
+                f"**{datetime.fromtimestamp(day.dt).date()}** "
+                f"{day.temp.min.formatted(settings)}/{day.temp.max.formatted(settings)}\n"
+                f"🌬️ **Wind:** {day.wind.formatted(settings)}\n"
+                f"{day.clouds.emoji} **Clouds:** {day.clouds}\n"
+                + day.rain.formatted_or(
+                    settings, fmt=f"💧 **Rain:** %s ({day.precip_percent}%%)\n"
+                )
+                + day.snow.formatted_or(
+                    settings, fmt=f"❄️ **Snow:** %s ({day.precip_percent}%%)\n"
+                )
+                for day in data.daily
+            ),
         )
+        return embed
 
     async def current_conditions(
         self, city: str, settings: UserSettings
