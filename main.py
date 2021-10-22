@@ -46,10 +46,7 @@ client = (
     tanjun.Client.from_gateway_bot(
         bot, set_global_commands=os.getenv("GUILD") or True
     )  # noqa E131
-    .set_type_dependency(
-        WeatherAPI,
-        WeatherAPI(),
-    )
+    .set_type_dependency(WeatherAPI, WeatherAPI())
     .set_type_dependency(DatabaseProto, db)
     .set_type_dependency(AstronomyAPI, AstronomyAPI())
     .set_type_dependency(Geocoder, Geocoder())
