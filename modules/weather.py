@@ -33,7 +33,7 @@ hooks = tanjun.SlashHooks()
 
 
 @hooks.with_on_error
-async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
+async def on_error(ctx: tanjun.SlashContext, error: Exception) -> bool:
     ctx.set_ephemeral_default(True)
     if isinstance(error, CityNotFoundError):
         await ctx.respond("City not found")
@@ -41,6 +41,7 @@ async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
         await ctx.respond(
             "This map doesn't seem to be available for this location"
         )
+    return True
 
 
 @hooks.add_to_command
