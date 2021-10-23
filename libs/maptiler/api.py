@@ -71,7 +71,7 @@ class MapTilerAPI:
         tiles, location = get_tiles(lat, lon, zoom)
         satellite_images = [
             await self._map_tile(
-                tile[0], tile[1], zoom, "/maps/hybrid/256", "png"
+                tile[0], tile[1], zoom, "/maps/hybrid/256", "jpg"
             )
             for tile in [
                 (tiles[0], tiles[1]),
