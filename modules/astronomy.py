@@ -20,8 +20,8 @@ import tanjun
 from skyfield.errors import EphemerisRangeError
 
 from bot.converters import parse_datetime
-from libs.astro_data import DSOClient
-from libs.astronomy import AstronomyAPI
+from libs.astro_data import AstronomyClient
+from libs.astronomy import AstronomyEventAPI
 from libs.nasa import NasaAPI, APOD
 from module_services.bot import BotUtils
 
@@ -37,7 +37,7 @@ async def on_error(ctx: tanjun.SlashContext, error: Exception) -> bool:
     ctx.set_ephemeral_default(True)
     if isinstance(error, EphemerisRangeError):
         await ctx.respond(
-            f"Almanac only supports dates from {AstronomyAPI.year_range[0]} to {AstronomyAPI.year_range[1]}"
+            f"Almanac only supports dates from {AstronomyEventAPI.year_range[0]} to {AstronomyEventAPI.year_range[1]}"
         )
     return True
 
@@ -49,7 +49,7 @@ async def on_error(ctx: tanjun.SlashContext, error: Exception) -> bool:
 async def seasons(
     ctx: tanjun.SlashContext,
     year: int,
-    _api: AstronomyAPI = tanjun.injected(type=AstronomyAPI),
+    _api: AstronomyEventAPI = tanjun.injected(type=AstronomyEventAPI),
     _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     await ctx.respond(
@@ -105,7 +105,7 @@ async def date_data(
 async def date_data(
     ctx: tanjun.SlashContext,
     date: datetime,
-    _api: AstronomyAPI = tanjun.injected(type=AstronomyAPI),
+    _api: AstronomyEventAPI = tanjun.injected(type=AstronomyEventAPI),
     _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     await ctx.respond(
@@ -128,7 +128,7 @@ async def lookup_object(
     ctx: tanjun.SlashContext,
     catalog: str,
     number: int,
-    _dso: DSOClient = tanjun.injected(type=DSOClient),
+    _dso: AstronomyClient = tanjun.injected(type=AstronomyClient),
     _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     obj = _dso.ngc(number) if catalog == "ngc" else _dso.m(number)

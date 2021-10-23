@@ -14,18 +14,45 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import csv
+import json
+from math import pi
 from typing import TextIO, Optional
 
-from libs.astro_data.models import DSO
+import pandas as pd
+
+from libs.astro_data.models import DSO, Star, Constellation
 
 
-class DSOClient:
-    def __init__(self, dso_fp: TextIO, ngc_fp: TextIO):
-        self.data = [
+class AstronomyClient:
+    def __init__(
+        self, dso_fp: TextIO, ngc_fp: TextIO, hyg_fp: TextIO, con_fp: TextIO
+    ):
+        self.dsos = [
             DSO(line)
             for line in dso_fp.readlines()
             if (line and not line.startswith("#"))
+        ]
+
+        pdata = pd.read_csv(hyg_fp)
+
+        self.stars = [
+            Star(
+                line.ra * 180 / pi,
+                line.dec * 180 / pi,
+                line.proper if isinstance(line.proper, str) else None,
+                line.mag,
+                line.con if isinstance(line.con, str) else None,
+                line.hip,
+            )
+            for line in pdata.itertuples()
+            if line.id != 0
+        ]
+
+        self._hipparcos_mapping = {star.hipparcos: star for star in self.stars}
+
+        self.constellations = [
+            Constellation(constellation, self)
+            for constellation in json.load(con_fp)["constellations"]
         ]
 
         # parse openngc dataset
@@ -34,7 +61,7 @@ class DSOClient:
             for line in ngc_fp.readlines()[1:]
         }
 
-        for dso in self.data:
+        for dso in self.dsos:
             if line := dataset.get(f"NGC{dso.ngc:>04}", None):
                 dso.common_names = line[-3].strip('"')
                 dso.ned_notes = line[-2].strip('"')
@@ -47,15 +74,25 @@ class DSOClient:
                 dso.constellation = line[3]
 
     def m(self, number: int) -> Optional[DSO]:
-        for dso in self.data:
+        for dso in self.dsos:
             if dso.m == number:
                 return dso
         else:
             return None
 
     def ngc(self, number: int) -> Optional[DSO]:
-        for dso in self.data:
+        for dso in self.dsos:
             if dso.ngc == number:
                 return dso
+        else:
+            return None
+
+    def hipparcos(self, number: int) -> Optional[Star]:
+        return self._hipparcos_mapping.get(number, None)
+
+    def constellation(self, iau: str) -> Optional[Constellation]:
+        for constellation in self.constellations:
+            if constellation.iau.lower() == iau.lower():
+                return constellation
         else:
             return None

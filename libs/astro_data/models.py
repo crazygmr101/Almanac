@@ -15,6 +15,10 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from dataclasses import dataclass
+from typing import List, TYPE_CHECKING, Tuple
+
+if TYPE_CHECKING:
+    from libs.astro_data import AstronomyClient
 
 _TYPE_MAPPINGS = {
     "G": "Galaxy",
@@ -138,3 +142,45 @@ class DSO:
     @property
     def pretty_type(self) -> str:
         return _TYPE_MAPPINGS[self.type.upper()]
+
+
+@dataclass
+class Star:
+    ra: float
+    dec: float
+    proper: str
+    mag: float
+    constellation: str
+    hipparcos: int
+
+
+@dataclass
+class LineSet:
+    thin: bool
+    segments: List[Tuple[Star, Star]]
+
+
+class Constellation:
+    def __init__(self, constellation, client: "AstronomyClient"):
+        self.iau: str = constellation["iau"]
+        self.english_name: str = constellation["common_name"]["english"]
+        self.native_name: str = constellation["common_name"]["native"]
+        self.lines: List[LineSet] = []
+        for line in constellation["lines"]:
+            if line[0] == "thin":
+                thin = True
+                line.pop(0)
+            else:
+                thin = False
+            self.lines.append(
+                LineSet(
+                    thin,
+                    [
+                        (
+                            client.hipparcos(line[i]),
+                            client.hipparcos(line[i + 1]),
+                        )
+                        for i in range(len(line) - 1)
+                    ],
+                )
+            )
