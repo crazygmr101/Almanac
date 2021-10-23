@@ -52,3 +52,10 @@ class DSOClient:
                 return dso
         else:
             return None
+
+    def ngc(self, number: int) -> Optional[DSO]:
+        for dso in self.data:
+            if dso.ngc == number:
+                return dso
+        else:
+            return None

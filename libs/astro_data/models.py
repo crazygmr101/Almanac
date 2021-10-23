@@ -15,7 +15,44 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 from dataclasses import dataclass
-from typing import TextIO
+
+_TYPE_MAPPINGS = {
+    "G": "Galaxy",
+    "GX": "Galaxy",
+    "AGX": "Active Galaxy",
+    "RG": "Radio Galaxy",
+    "IG": "Interacting Galaxy",
+    "GC": "Globular Cluster",
+    "OC": "Open Cluster",
+    "NB": "Nebula",
+    "PN": "Planetary Nebula",
+    "DN": "Dark Nebula",
+    "RN": "Reflection Nebula",
+    "C+N": "Cluster associated with nebulosity",
+    "HII": "HII Region",
+    "SNR": "Supernova Remnant",
+    "BN": "Bipolar Nebula",
+    "EN": "Emission Nebula",
+    "SA": "Stellar Association",
+    "SC": "Star Cloud",
+    "CL": "Cluster",
+    "IR": "Infra-Red Object",
+    "QSO": "Quasar",
+    "Q?": "Possible Quasar",
+    "ISM": "Interstellar Matter",
+    "EMO": "Emission Object",
+    "LIN": "LINEAR-type Active Galaxies",
+    "BLL": "BL Lac Object",
+    "BLA": "Blazar",
+    "MOC": "Molecular Cloud",
+    "YSO": "Young Stellar Object",
+    "PN?": "Possible Planetary Nebula",
+    "PPN": "Protoplanetary Nebula",
+    "*": "Star",
+    "**": "Double Star",
+    "MUL": "Multiple Star",
+    "empty": "Unknown",
+}
 
 
 @dataclass
@@ -88,7 +125,7 @@ class DSO:
 
     def __str__(self) -> str:
         return (
-            f"ID: {self.id}  TYPE: {self.type}  MTYPE: {self.morph_type}\n"
+            f"ID: {self.id}  TYPE: {_TYPE_MAPPINGS[self.type.upper()]}  MTYPE: {self.morph_type}\n"
             f"{self.location}  {self.constellation}\n"
             f"MAG: {self.magnitude}\n"
             f"SIZE: {self.size} @ {self.angle}\n"
@@ -97,3 +134,7 @@ class DSO:
             f"NED Notes: {self.ned_notes or '-'}\n"
             f"OpenNGC Notes: {self.open_ngc_notes or '-'}\n"
         )
+
+    @property
+    def pretty_type(self) -> str:
+        return _TYPE_MAPPINGS[self.type.upper()]
