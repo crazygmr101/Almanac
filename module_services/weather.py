@@ -40,7 +40,6 @@ class WeatherAPI(BotUtils, Geocoder):
     async def forecast(
         self, city: str, settings: UserSettings
     ) -> hikari.Embed:
-        # TODO actually finish this
         lat, lon = await self.parse_location(city)
         data = await self.owm_api.get_forecast(lat, lon)
         embed = self.ok_embed(

@@ -61,7 +61,6 @@ async def current(
     )
 
 
-# TODO this needs to be done
 @hooks.add_to_command
 @weather_group.with_command
 @tanjun.with_str_slash_option("location", "Location to look up")
