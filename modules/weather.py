@@ -33,7 +33,7 @@ hooks = tanjun.SlashHooks()
 
 
 @hooks.with_on_error
-async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
+async def on_error(ctx: tanjun.SlashContext, error: Exception) -> bool:
     ctx.set_ephemeral_default(True)
     if isinstance(error, CityNotFoundError):
         await ctx.respond("City not found")
@@ -41,6 +41,7 @@ async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
         await ctx.respond(
             "This map doesn't seem to be available for this location"
         )
+    return True
 
 
 @hooks.add_to_command
@@ -48,10 +49,10 @@ async def on_error(ctx: tanjun.SlashContext, error: Exception) -> None:
 @tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command("current", "Current weather at a location")
 async def current(
-    ctx: tanjun.SlashContext,
-    location: str,
-    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
-    _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
+        ctx: tanjun.SlashContext,
+        location: str,
+        _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+        _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
 ):
     await ctx.respond(
         embed=await _service.current_conditions(
@@ -66,10 +67,10 @@ async def current(
 @tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command("forecast", "Forecast for a location")
 async def forecast(
-    ctx: tanjun.SlashContext,
-    location: str,
-    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
-    _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
+        ctx: tanjun.SlashContext,
+        location: str,
+        _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+        _db: DatabaseProto = tanjun.injected(type=DatabaseProto),
 ):
     await ctx.respond(
         embed=await _service.forecast(
@@ -83,10 +84,10 @@ async def forecast(
 @tanjun.with_float_slash_option("longitude", "Longitude of the location")
 @tanjun.as_slash_command("point", "Lookup NWS point data for a lat/long")
 async def point(
-    ctx: tanjun.SlashContext,
-    latitude: float,
-    longitude: float,
-    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+        ctx: tanjun.SlashContext,
+        latitude: float,
+        longitude: float,
+        _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
 ):
     await ctx.respond(embed=await _service.point_data(latitude, longitude))
 
@@ -96,28 +97,28 @@ async def point(
 @tanjun.with_int_slash_option(
     "zoom",
     "Zoom level",
-    choices=[
-        (f"Level {n}" + (" - Default" if n == 8 else ""), n)
+    choices={
+        f"Level {n}" + (" - Default" if n == 8 else ""): n
         for n in range(1, 17)
-    ],
+    },
     default=8,
 )
 @tanjun.with_str_slash_option(
     "layer",
     "Map type to look up",
     default="clouds",
-    choices=[(typ.title(), typ) for typ in WeatherAPI.MAP_TYPES],
+    choices={typ.title(): typ for typ in WeatherAPI.MAP_TYPES}
 )
 @tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command(
     "weather-map", "Look up the weather map for a location", sort_options=True
 )
 async def weather_map(
-    ctx: tanjun.SlashContext,
-    zoom: int,
-    layer: str,
-    location: str,
-    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+        ctx: tanjun.SlashContext,
+        zoom: int,
+        layer: str,
+        location: str,
+        _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
 ):
     await ctx.respond(embed=await _service.weather_map(location, zoom, layer))
 
@@ -129,9 +130,9 @@ async def weather_map(
     "pollution", "Look up detailed pollution data for a location"
 )
 async def pollution_data(
-    ctx: tanjun.SlashContext,
-    location: str,
-    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+        ctx: tanjun.SlashContext,
+        location: str,
+        _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
 ):
     await ctx.respond(embed=await _service.current_pollution(location))
 
@@ -141,9 +142,9 @@ async def pollution_data(
 @tanjun.with_str_slash_option("location", "Location to look up")
 @tanjun.as_slash_command("radar", "Look up the radar for a location")
 async def radar(
-    ctx: tanjun.SlashContext,
-    location: str,
-    _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
+        ctx: tanjun.SlashContext,
+        location: str,
+        _service: WeatherAPI = tanjun.injected(type=WeatherAPI),
 ):
     await ctx.respond(embed=await _service.radar_map(location))
 

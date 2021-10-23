@@ -17,6 +17,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from datetime import datetime
 
 import tanjun
+from skyfield.errors import EphemerisRangeError
 
 from bot.converters import parse_datetime
 from libs.astronomy import AstronomyAPI
@@ -27,8 +28,20 @@ component = tanjun.Component()
 astro_group = component.with_slash_command(
     tanjun.SlashCommandGroup("astro", "Astronomy commands")
 )
+hooks = tanjun.SlashHooks()
 
 
+@hooks.with_on_error
+async def on_error(ctx: tanjun.SlashContext, error: Exception) -> bool:
+    ctx.set_ephemeral_default(True)
+    if isinstance(error, EphemerisRangeError):
+        await ctx.respond(
+            f"Almanac only supports dates from {AstronomyAPI.year_range[0]} to {AstronomyAPI.year_range[1]}"
+        )
+    return True
+
+
+@hooks.add_to_command
 @astro_group.with_command
 @tanjun.with_int_slash_option("year", "The year to look up")
 @tanjun.as_slash_command("seasons", "Season Times")
@@ -57,6 +70,7 @@ async def seasons(
     )
 
 
+@hooks.add_to_command
 @astro_group.with_command
 @tanjun.with_str_slash_option(
     "date", "The date to look up", converters=(parse_datetime,), default=None
@@ -81,6 +95,7 @@ async def date_data(
     await ctx.respond(embed=response_embed)
 
 
+@hooks.add_to_command
 @astro_group.with_command
 @tanjun.with_str_slash_option(
     "date", "The date to look up", converters=(parse_datetime,)

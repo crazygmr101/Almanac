@@ -14,6 +14,7 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+from datetime import datetime
 from typing import Iterable
 
 import pytz
@@ -25,8 +26,11 @@ from .models import SeasonTimes, MoonPhase
 
 class AstronomyAPI:
     def __init__(self):
-        self.eph = api.load_file("de421.bsp")
+        self.eph = api.load_file("de440.bsp")
         self.timescale = api.load.timescale()
+
+    # for de440
+    year_range = 1550, 2650
 
     def seasons(self, year: int) -> SeasonTimes:
         t: Iterable[Time]
