@@ -44,7 +44,10 @@ db = DatabaseImpl.connect()
 bot = hikari.GatewayBot(token=os.getenv("TOKEN"))
 client = (
     tanjun.Client.from_gateway_bot(
-        bot, declare_global_commands=int(os.getenv("GUILD")) if os.getenv("GUILD") else True
+        bot,
+        declare_global_commands=int(os.getenv("GUILD"))
+        if os.getenv("GUILD")
+        else True,
     )  # noqa E131
     .set_type_dependency(WeatherAPI, WeatherAPI())
     .set_type_dependency(DatabaseProto, db)
