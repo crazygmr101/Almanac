@@ -54,3 +54,24 @@ def assemble_mosaic(
         ]
     )
     return mosaic
+
+
+def dd_to_dms(dd: float) -> Tuple[int, int, float]:
+    sign = -1 if dd < 0 else 1
+    dd = abs(dd)
+    deg = int(dd)
+    minutes = int((dd - deg) * 60)
+    seconds = (dd - deg - minutes / 60) * 3600
+    return deg * sign, minutes, seconds
+
+
+def ra_to_str(ra: float) -> str:
+    hours, minutes, seconds = dd_to_dms(ra)
+
+    return f"{hours}h {minutes:>02}m {seconds:.5f}"
+
+
+def dd_to_str_dms(dd: float) -> str:
+    deg, minutes, seconds = dd_to_dms(dd)
+
+    return f"{deg}°{minutes:>02}'{seconds:.5f}\""

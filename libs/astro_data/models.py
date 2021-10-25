@@ -201,10 +201,11 @@ class Constellation:
 
     @property
     def orthographic_image(self) -> str:
-        return (
-            f"https://raw.githubusercontent.com/crazygmr101/Almanac/"
-            f"18f9716bd96f037d212c2c372fc31899821a64c4/assets/orbs/{self.iau}.png"
-        )
+        return f"https://github.com/crazygmr101/Almanac/blob/master/assets/orbs/{self.iau}.png"
+
+    @property
+    def hammer_image(self) -> str:
+        return f"https://github.com/crazygmr101/Almanac/blob/master/assets/hammer/{self.iau}.png"
 
     @cached_property
     def main_stars(self) -> Set[Star]:

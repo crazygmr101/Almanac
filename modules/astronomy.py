@@ -22,6 +22,7 @@ from skyfield.errors import EphemerisRangeError
 from bot.converters import parse_datetime
 from libs.astro_data import AstronomyClient
 from libs.astronomy import AstronomyEventAPI
+from libs.helpers import ra_to_str, dd_to_str_dms
 from libs.nasa import NasaAPI, APOD
 from module_services.bot import BotUtils
 
@@ -121,23 +122,43 @@ async def date_data(
 
 @astro_constellation_group.with_command
 @tanjun.with_str_slash_option("constellation", "Constellation to view")
-@tanjun.as_slash_command("view", "View an orthographic map of a constellation")
+@tanjun.with_str_slash_option(
+    "type",
+    "Type of map to view",
+    choices={
+        "Orb": "orthographic",
+        "Locator": "hammer",
+    },
+    default="hammer",
+)
+@tanjun.as_slash_command("view", "View an map of a constellation")
 async def constellation_orthographic(
     ctx: tanjun.SlashContext,
     constellation: str,
+    type: str,
     _dso: AstronomyClient = tanjun.injected(type=AstronomyClient),
     _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     const = _dso.constellation(constellation)
-    desc = f"**{const.english_name}**\n"
-    if const.named_stars:
-        desc += "**Named Stars**: " + ", ".join(
-            star.proper for star in const.named_stars
+    if type == "orthographic":
+        desc = f"**{const.english_name}**\n"
+        if const.named_stars:
+            desc += "**Named Stars**: " + ", ".join(
+                star.proper for star in const.named_stars
+            )
+    else:
+        desc = (
+            f"**RA**: {ra_to_str(const.center.ra)}\n"
+            f"**Dec**: {dd_to_str_dms(const.center.dec)}"
         )
     await ctx.respond(
         _bot.ok_embed(
             title=f"{const.native_name} `{const.iau}`", description=desc
-        ).set_image(const.orthographic_image)
+        ).set_image(
+            const.orthographic_image
+            if type == "orthographic"
+            else const.hammer_image
+        )
     )
 
 
