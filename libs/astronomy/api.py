@@ -24,7 +24,7 @@ from skyfield.timelib import Time
 from .models import SeasonTimes, MoonPhase
 
 
-class AstronomyAPI:
+class AstronomyEventAPI:
     def __init__(self):
         self.eph = api.load_file("de440.bsp")
         self.timescale = api.load.timescale()

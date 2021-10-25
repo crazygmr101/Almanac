@@ -22,7 +22,8 @@ from pathlib import Path
 import dotenv
 
 from bot import LoggingHandler
-from libs.astronomy import AstronomyAPI
+from libs.astro_data import AstronomyClient
+from libs.astronomy import AstronomyEventAPI
 from libs.nasa import NasaAPI
 from module_services.geocoding import Geocoder
 
@@ -41,17 +42,30 @@ from module_services.weather import WeatherAPI  # noqa E402
 
 db = DatabaseImpl.connect()
 
+with open("data/catalog.txt") as stellarium_fp, open(
+    "data/NGC.csv"
+) as open_ngc_fp, open("data/HYG.csv") as hyg_csv, open(
+    "data/constellations.json"
+) as constellations:
+    astro_client = AstronomyClient(
+        stellarium_fp, open_ngc_fp, hyg_csv, constellations
+    )
+
 bot = hikari.GatewayBot(token=os.getenv("TOKEN"))
 client = (
     tanjun.Client.from_gateway_bot(
-        bot, declare_global_commands=int(os.getenv("GUILD")) if os.getenv("GUILD") else True
+        bot,
+        declare_global_commands=int(os.getenv("GUILD"))
+        if os.getenv("GUILD")
+        else True,
     )  # noqa E131
     .set_type_dependency(WeatherAPI, WeatherAPI())
     .set_type_dependency(DatabaseProto, db)
-    .set_type_dependency(AstronomyAPI, AstronomyAPI())
+    .set_type_dependency(AstronomyEventAPI, AstronomyEventAPI())
     .set_type_dependency(Geocoder, Geocoder())
     .set_type_dependency(NasaAPI, NasaAPI())
     .set_type_dependency(BotUtils, BotUtils())
+    .set_type_dependency(AstronomyClient, astro_client)
     .set_auto_defer_after(0.1)
     .load_modules(*Path("./modules").glob("**/*.py"))
 )
