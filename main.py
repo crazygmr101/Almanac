@@ -44,8 +44,12 @@ db = DatabaseImpl.connect()
 
 with open("data/catalog.txt") as stellarium_fp, open(
     "data/NGC.csv"
-) as open_ngc_fp:
-    dso_client = AstronomyClient(stellarium_fp, open_ngc_fp)
+) as open_ngc_fp, open("data/HYG.csv") as hyg_csv, open(
+    "data/constellations.json"
+) as constellations:
+    astro_client = AstronomyClient(
+        stellarium_fp, open_ngc_fp, hyg_csv, constellations
+    )
 
 bot = hikari.GatewayBot(token=os.getenv("TOKEN"))
 client = (
@@ -61,7 +65,7 @@ client = (
     .set_type_dependency(Geocoder, Geocoder())
     .set_type_dependency(NasaAPI, NasaAPI())
     .set_type_dependency(BotUtils, BotUtils())
-    .set_type_dependency(AstronomyClient, dso_client)
+    .set_type_dependency(AstronomyClient, astro_client)
     .set_auto_defer_after(0.1)
     .load_modules(*Path("./modules").glob("**/*.py"))
 )

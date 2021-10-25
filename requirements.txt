@@ -11,3 +11,5 @@ skyfield~=1.39
 dateparser~=1.1.0
 matplotlib~=3.4.3
 pandas~=1.3.4
+cartopy~=0.20.1
+cartosky~=0.1

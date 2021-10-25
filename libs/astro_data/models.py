@@ -14,8 +14,10 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import itertools
 from dataclasses import dataclass
-from typing import List, TYPE_CHECKING, Tuple
+from functools import cached_property
+from typing import List, TYPE_CHECKING, Tuple, Iterable, Set
 
 if TYPE_CHECKING:
     from libs.astro_data import AstronomyClient
@@ -153,11 +155,28 @@ class Star:
     constellation: str
     hipparcos: int
 
+    @property
+    def ra_deg(self) -> float:
+        return (self.ra - 24 if self.ra > 12 else self.ra) * 15
+
+    def __hash__(self):
+        return f"{self.hipparcos}{self.ra}{self.dec}"
+
 
 @dataclass
-class LineSet:
+class Point:
+    ra: float
+    dec: float
+
+    @property
+    def ra_deg(self) -> float:
+        return (self.ra - 24 if self.ra > 12 else self.ra) * 15
+
+
+@dataclass
+class Line:
     thin: bool
-    segments: List[Tuple[Star, Star]]
+    segment: List[Star]
 
 
 class Constellation:
@@ -165,7 +184,8 @@ class Constellation:
         self.iau: str = constellation["iau"]
         self.english_name: str = constellation["common_name"]["english"]
         self.native_name: str = constellation["common_name"]["native"]
-        self.lines: List[LineSet] = []
+        self.lines: List[Line] = []
+        self.__parent_client = client
         for line in constellation["lines"]:
             if line[0] == "thin":
                 thin = True
@@ -173,14 +193,33 @@ class Constellation:
             else:
                 thin = False
             self.lines.append(
-                LineSet(
-                    thin,
-                    [
-                        (
-                            client.hipparcos(line[i]),
-                            client.hipparcos(line[i + 1]),
-                        )
-                        for i in range(len(line) - 1)
-                    ],
-                )
+                Line(thin, [client.hipparcos(star) for star in line])
             )
+
+    @cached_property
+    def main_stars(self) -> Set[Star]:
+        return set(itertools.chain(*[part.segment for part in self.lines]))
+
+    def __iter__(self) -> Iterable[Star]:
+        for star in self.__parent_client.stars:
+            if star.constellation.lower() == self.iau.lower():
+                yield star
+
+    @cached_property
+    def bounds(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+        max_ra = self.lines[0].segment[0].ra
+        min_ra = self.lines[0].segment[0].ra
+        max_dec = self.lines[0].segment[0].dec
+        min_dec = self.lines[0].segment[0].dec
+        for line in self.lines:
+            for star in line.segment:
+                max_ra = max(max_ra, star.ra)
+                min_ra = min(min_ra, star.ra)
+                max_dec = max(max_dec, star.dec)
+                min_dec = min(min_dec, star.dec)
+        return (min_ra, max_ra), (min_dec, max_dec)
+
+    @cached_property
+    def center(self) -> Point:
+        ra, dec = self.bounds
+        return Point((ra[0] + ra[1]) / 2, (dec[0] + dec[1]) / 2)

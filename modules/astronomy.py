@@ -115,6 +115,22 @@ async def date_data(
         )
     )
 
+@astro_group.with_command
+@tanjun.with_int_slash_option("constellation", "Constellation to view",
+                              choices={constellation.native_name: constellation.iau
+                                       for constellation in AstronomyClient.constellations})
+@tanjun.as_slash_command("constellation", "View an orthographic map of a constellation")
+async def constellation_orthographic(
+        ctx: tanjun.SlashContext,
+        constellation: str,
+        _dso: AstronomyClient = tanjun.injected(type=AstronomyClient),
+        _bot: BotUtils = tanjun.injected(type=BotUtils)
+):
+    const = _dso.constellation(constellation)
+    desc = f"{}"
+    await ctx.respond(_bot.ok_embed(title=const.native_name,
+                                    description=f""))
+
 
 @astro_group.with_command
 @tanjun.with_int_slash_option("number", "The number to look up")

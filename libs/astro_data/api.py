@@ -15,8 +15,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import json
-from math import pi
-from typing import TextIO, Optional
+from typing import TextIO, Optional, Tuple, Iterable, List
 
 import pandas as pd
 
@@ -24,6 +23,8 @@ from libs.astro_data.models import DSO, Star, Constellation
 
 
 class AstronomyClient:
+    constellations: List[Constellation] = []
+
     def __init__(
         self, dso_fp: TextIO, ngc_fp: TextIO, hyg_fp: TextIO, con_fp: TextIO
     ):
@@ -37,8 +38,8 @@ class AstronomyClient:
 
         self.stars = [
             Star(
-                line.ra * 180 / pi,
-                line.dec * 180 / pi,
+                line.ra,
+                line.dec,
                 line.proper if isinstance(line.proper, str) else None,
                 line.mag,
                 line.con if isinstance(line.con, str) else None,
@@ -50,7 +51,7 @@ class AstronomyClient:
 
         self._hipparcos_mapping = {star.hipparcos: star for star in self.stars}
 
-        self.constellations = [
+        self.constellations = AstronomyClient.constellations = [
             Constellation(constellation, self)
             for constellation in json.load(con_fp)["constellations"]
         ]
@@ -96,3 +97,20 @@ class AstronomyClient:
                 return constellation
         else:
             return None
+
+    def star(self, name: str) -> Optional[Star]:
+        for star in self.stars:
+            if star.proper and star.proper.lower() == name.lower():
+                return star
+        else:
+            return None
+
+    def star_in_bounds(
+        self, ra: Tuple[float, float], dec: Tuple[float, float]
+    ) -> Iterable[Star]:
+        bounds = [[min(ra), max(ra)], [min(dec), max(dec)]]
+        return filter(
+            lambda star: bounds[0][0] < star.ra < bounds[0][1]
+            and bounds[1][0] < star.dec < bounds[1][1],
+            self.stars,
+        )
