@@ -162,6 +162,9 @@ class Star:
     def __hash__(self):
         return f"{self.hipparcos}{self.ra}{self.dec}"
 
+    def __str__(self):
+        return self.proper or f"hip{self.hipparcos}"
+
 
 @dataclass
 class Point:
@@ -196,13 +199,31 @@ class Constellation:
                 Line(thin, [client.hipparcos(star) for star in line])
             )
 
+    @property
+    def orthographic_image(self) -> str:
+        return (
+            f"https://raw.githubusercontent.com/crazygmr101/Almanac/"
+            f"18f9716bd96f037d212c2c372fc31899821a64c4/assets/orbs/{self.iau}.png"
+        )
+
     @cached_property
     def main_stars(self) -> Set[Star]:
         return set(itertools.chain(*[part.segment for part in self.lines]))
 
+    @cached_property
+    def main_star_count(self) -> int:
+        return len(self.main_stars)
+
+    @cached_property
+    def named_stars(self) -> Iterable[Star]:
+        return filter(lambda star: star.proper, self)
+
     def __iter__(self) -> Iterable[Star]:
         for star in self.__parent_client.stars:
-            if star.constellation.lower() == self.iau.lower():
+            if (
+                star.constellation
+                and star.constellation.lower() == self.iau.lower()
+            ):
                 yield star
 
     @cached_property

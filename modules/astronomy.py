@@ -29,6 +29,9 @@ component = tanjun.Component()
 astro_group = component.with_slash_command(
     tanjun.SlashCommandGroup("astro", "Astronomy commands")
 )
+astro_constellation_group = astro_group.with_command(
+    tanjun.SlashCommandGroup("constellations", "Constellation commands")
+)
 hooks = tanjun.SlashHooks()
 
 
@@ -115,21 +118,47 @@ async def date_data(
         )
     )
 
-@astro_group.with_command
-@tanjun.with_int_slash_option("constellation", "Constellation to view",
-                              choices={constellation.native_name: constellation.iau
-                                       for constellation in AstronomyClient.constellations})
-@tanjun.as_slash_command("constellation", "View an orthographic map of a constellation")
+
+@astro_constellation_group.with_command
+@tanjun.with_str_slash_option("constellation", "Constellation to view")
+@tanjun.as_slash_command("view", "View an orthographic map of a constellation")
 async def constellation_orthographic(
-        ctx: tanjun.SlashContext,
-        constellation: str,
-        _dso: AstronomyClient = tanjun.injected(type=AstronomyClient),
-        _bot: BotUtils = tanjun.injected(type=BotUtils)
+    ctx: tanjun.SlashContext,
+    constellation: str,
+    _dso: AstronomyClient = tanjun.injected(type=AstronomyClient),
+    _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     const = _dso.constellation(constellation)
-    desc = f"{}"
-    await ctx.respond(_bot.ok_embed(title=const.native_name,
-                                    description=f""))
+    desc = f"**{const.english_name}**\n"
+    if const.named_stars:
+        desc += "**Named Stars**: " + ", ".join(
+            star.proper for star in const.named_stars
+        )
+    await ctx.respond(
+        _bot.ok_embed(
+            title=f"{const.native_name} `{const.iau}`", description=desc
+        ).set_image(const.orthographic_image)
+    )
+
+
+@astro_constellation_group.with_command
+@tanjun.as_slash_command("list", "List all 88 constellations")
+async def constellation_list(
+    ctx: tanjun.SlashContext,
+    _dso: AstronomyClient = tanjun.injected(type=AstronomyClient),
+    _bot: BotUtils = tanjun.injected(type=BotUtils),
+):
+    ctx.set_ephemeral_default(True)
+    await ctx.respond(
+        _bot.ok_embed(
+            title="Constellation List",
+            description="\n".join(
+                f"`{constellation.iau}` - {constellation.native_name} - "
+                f"{constellation.english_name}"
+                for constellation in _dso.constellations
+            ),
+        )
+    )
 
 
 @astro_group.with_command

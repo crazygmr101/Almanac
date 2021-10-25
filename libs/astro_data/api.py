@@ -15,6 +15,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import json
+from functools import lru_cache
 from typing import TextIO, Optional, Tuple, Iterable, List
 
 import pandas as pd
@@ -91,12 +92,19 @@ class AstronomyClient:
     def hipparcos(self, number: int) -> Optional[Star]:
         return self._hipparcos_mapping.get(number, None)
 
-    def constellation(self, iau: str) -> Optional[Constellation]:
+    @lru_cache(maxsize=1024)
+    def constellation(self, search_term: str) -> Optional[Constellation]:
+        search_term = search_term.lower()
         for constellation in self.constellations:
-            if constellation.iau.lower() == iau.lower():
+            if constellation.iau.lower() == search_term:
                 return constellation
-        else:
-            return None
+        for constellation in self.constellations:
+            if (
+                search_term in constellation.native_name
+                or search_term in constellation.english_name
+            ):
+                return constellation
+        return None
 
     def star(self, name: str) -> Optional[Star]:
         for star in self.stars:
