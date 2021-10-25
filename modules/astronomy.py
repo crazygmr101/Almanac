@@ -121,7 +121,6 @@ async def date_data(
 
 
 @astro_constellation_group.with_command
-@tanjun.with_str_slash_option("constellation", "Constellation to view")
 @tanjun.with_str_slash_option(
     "type",
     "Type of map to view",
@@ -129,8 +128,9 @@ async def date_data(
         "Orb": "orthographic",
         "Locator": "hammer",
     },
-    default="hammer",
+    default="orthographic",
 )
+@tanjun.with_str_slash_option("constellation", "Constellation to view")
 @tanjun.as_slash_command("view", "View an map of a constellation")
 async def constellation_orthographic(
     ctx: tanjun.SlashContext,
