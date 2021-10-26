@@ -19,7 +19,7 @@ from libs.openweathermap.helpers import cloud_coverage_label, direction_for
 
 
 class Temperature(float):
-    def convert(self, settings: UserSettings) -> "Temperature":
+    def convert(self, settings: UserSettings) -> float:
         return self if settings.imperial else (self - 32) / 1.8
 
     def formatted(self, settings: UserSettings) -> str:
@@ -28,7 +28,7 @@ class Temperature(float):
 
 
 class Speed(float):
-    def convert(self, settings: UserSettings) -> "Speed":
+    def convert(self, settings: UserSettings) -> float:
         return self if settings.imperial else self * 1.60934
 
     def formatted(self, settings: UserSettings) -> str:
@@ -37,7 +37,7 @@ class Speed(float):
 
 
 class Distance(float):
-    def convert(self, settings: UserSettings) -> "Distance":
+    def convert(self, settings: UserSettings) -> float:
         return self if settings.imperial else self * 1.60934
 
     def formatted(self, settings: UserSettings) -> str:
@@ -63,14 +63,14 @@ class Wind:
         self._speed = speed
 
     def convert(self, settings: UserSettings) -> "Wind":
-        return self.__class__(self._dir, self._speed.convert(settings))
+        return self.__class__(self._dir, Speed(self._speed.convert(settings)))
 
     def formatted(self, settings: UserSettings) -> str:
         return f"{self._speed.formatted(settings)} {direction_for(self._dir)}"
 
 
 class Precipitation(float):
-    def convert(self, settings: UserSettings) -> "Precipitation":
+    def convert(self, settings: UserSettings) -> float:
         return self / 25.4 if settings.imperial else self
 
     def formatted(self, settings: UserSettings) -> str:

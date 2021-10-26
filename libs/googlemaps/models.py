@@ -14,15 +14,14 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Optional
 
-from dataclasses_json import dataclass_json
+from dataclasses_json import dataclass_json, DataClassJsonMixin
 
 
-@dataclass_json
 @dataclass
-class Coordinates:
+class Coordinates(DataClassJsonMixin):
     lat: int
     lng: int
 
@@ -31,32 +30,28 @@ class Coordinates:
         return self.lng
 
 
-@dataclass_json
 @dataclass
-class GoogleMapsGeometry:
+class GoogleMapsGeometry(DataClassJsonMixin):
     location: Coordinates
     location_type: str
 
 
-@dataclass_json
 @dataclass
-class GoogleMapsAddressComponent:
+class GoogleMapsAddressComponent(DataClassJsonMixin):
     long_name: str
     short_name: str
     types: List[str]
 
 
-@dataclass_json
 @dataclass
-class GoogleMapsAddress:
+class GoogleMapsAddress(DataClassJsonMixin):
     address_components: List[GoogleMapsAddressComponent]
     formatted_address: str
     types: List[str]
     geometry: GoogleMapsGeometry
 
 
-@dataclass_json
 @dataclass
-class GeocodeResponse:
+class GeocodeResponse(DataClassJsonMixin):
     status: str
-    results: List[GoogleMapsAddress] = None
+    results: List[GoogleMapsAddress] = field(default_factory=lambda: [])

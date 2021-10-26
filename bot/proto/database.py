@@ -14,15 +14,14 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-import typing
-from dataclasses import dataclass
+from typing import Any, Dict, Iterable, Tuple
 
 
 class DatabaseProto:
-    def set_setting(self, user: int, setting: str, value: typing.Any):
+    def set_setting(self, user: int, setting: str, value: Any):
         raise NotImplementedError
 
-    def get_setting(self, user: int, setting: str) -> typing.Any:
+    def get_setting(self, user: int, setting: str) -> Any:
         raise NotImplementedError
 
     def get_settings(self, user: int) -> "UserSettings":
@@ -33,14 +32,12 @@ class InvalidSetting(Exception):
     ...
 
 
-@dataclass(frozen=True)
 class UserSettings:
-    user: int
-    imperial: bool
+    def __init__(self, user: int, imperial: bool):
+        self.user = user
+        self.imperial = imperial
+        self.__current = 0
+        self.__elements = [self.user, self.imperial]
 
-    def values(self) -> typing.Dict[str, typing.Any]:
+    def values(self) -> Dict[str, Any]:
         return {"Unit System": "Imperial" if self.imperial else "Metric"}
-
-    def __iter__(self) -> typing.Iterable[typing.Tuple[str, typing.Any]]:
-        for name, value in self.values().items():
-            yield name, value

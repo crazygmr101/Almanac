@@ -46,12 +46,12 @@ def assemble_mosaic(
     mosaic.paste(images[2], (256, 0))
     mosaic.paste(images[3], (256, 256))
     mosaic = mosaic.crop(
-        [
+        (
             location[0] - 128,
             location[1] - 128,
             location[0] + 128,
             location[1] + 128,
-        ]
+        )
     )
     return mosaic
 

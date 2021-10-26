@@ -33,7 +33,7 @@ settings_set_group = settings_group.with_command(
 @tanjun.with_str_slash_option(
     "setting",
     "The setting to set",
-    choices=[("Imperial", "imperial"), ("Metric", "metric")],
+    choices={"Imperial": "imperial", "Metric": "metric"},
 )
 @tanjun.as_slash_command("units", "Set your default units")
 async def set_setting(
@@ -62,6 +62,8 @@ async def list_settings(
             "\n".join(
                 f"**{name}** - {value}"
                 for name, value in _db.get_settings(ctx.author.id)
+                .values()
+                .items()
             ),
         ),
     )

@@ -17,7 +17,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 import itertools
 from dataclasses import dataclass
 from functools import cached_property
-from typing import List, TYPE_CHECKING, Tuple, Iterable, Set
+from typing import List, TYPE_CHECKING, Tuple, Iterable, Set, Optional
 
 if TYPE_CHECKING:
     from libs.astro_data import AstronomyClient
@@ -150,9 +150,9 @@ class DSO:
 class Star:
     ra: float
     dec: float
-    proper: str
+    proper: Optional[str]
     mag: float
-    constellation: str
+    constellation: Optional[str]
     hipparcos: int
 
     @property
@@ -196,7 +196,8 @@ class Constellation:
             else:
                 thin = False
             self.lines.append(
-                Line(thin, [client.hipparcos(star) for star in line])
+                # always assuming the hipparcos numbers are valid here
+                Line(thin, [client.hipparcos(star) for star in line])  # type: ignore
             )
 
     @property
@@ -216,16 +217,21 @@ class Constellation:
         return len(self.main_stars)
 
     @cached_property
-    def named_stars(self) -> Iterable[Star]:
-        return filter(lambda star: star.proper, self)
+    def named_stars(self) -> List[Star]:
+        return [star for star in self.stars if star.proper]
 
-    def __iter__(self) -> Iterable[Star]:
-        for star in self.__parent_client.stars:
-            if (
-                star.constellation
-                and star.constellation.lower() == self.iau.lower()
-            ):
-                yield star
+    @cached_property
+    def stars(self) -> List[Star]:
+        return [
+            star
+            for star in self.__parent_client.stars
+            if star.constellation and star.constellation == self
+        ]
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, type(self)):
+            return other.iau.lower() == self.iau.lower()
+        return False
 
     @cached_property
     def bounds(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:

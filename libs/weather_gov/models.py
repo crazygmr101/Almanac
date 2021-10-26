@@ -17,35 +17,31 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from dataclasses import dataclass, field
 from typing import Optional
 
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import dataclass_json, config, DataClassJsonMixin
 
 
-@dataclass_json
 @dataclass
-class WeatherGovUnitValue:
+class WeatherGovUnitValue(DataClassJsonMixin):
     value: float
     unit_code: str = field(metadata=config(field_name="unitCode"))
 
 
-@dataclass_json
 @dataclass
-class WeatherGovRLProperties:
+class WeatherGovRLProperties(DataClassJsonMixin):
     city: str
     state: str
     distance: WeatherGovUnitValue
     bearing: WeatherGovUnitValue
 
 
-@dataclass_json
 @dataclass
-class WeatherGovRelativeLocation:
+class WeatherGovRelativeLocation(DataClassJsonMixin):
     type: str
     properties: WeatherGovRLProperties
 
 
-@dataclass_json
 @dataclass
-class WeatherGovPointProperties:
+class WeatherGovPointProperties(DataClassJsonMixin):
     cwa: str
     grid_id: str = field(metadata=config(field_name="gridId"))
     grid_x: int = field(metadata=config(field_name="gridX"))
@@ -72,8 +68,7 @@ class WeatherGovPointProperties:
     radar_station: str = field(metadata=config(field_name="radarStation"))
 
 
-@dataclass_json
 @dataclass
-class WeatherGovPoint:
+class WeatherGovPoint(DataClassJsonMixin):
     properties: WeatherGovPointProperties
     id: str

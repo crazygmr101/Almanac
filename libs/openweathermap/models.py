@@ -1,14 +1,13 @@
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Union
 
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import config, DataClassJsonMixin
 
 from bot.proto.database import UserSettings
 
 
-@dataclass_json
 @dataclass
-class GenericResponse:
+class GenericResponse(DataClassJsonMixin):
     _status_code: Union[str, int] = field(metadata=config(field_name="cod"))
 
     @property
@@ -16,9 +15,8 @@ class GenericResponse:
         return int(self._status_code)
 
 
-@dataclass_json
 @dataclass
-class Condition:
+class Condition(DataClassJsonMixin):
     id: int
     main: str
     description: str
@@ -26,23 +24,22 @@ class Condition:
 
 
 class Temperature(float):
-    def convert(self, settings: UserSettings) -> "Temperature":
+    def convert(self, settings: UserSettings) -> float:
         return self if settings.imperial else (self - 32) / 1.8
 
 
 class Speed(float):
-    def convert(self, settings: UserSettings) -> "Speed":
+    def convert(self, settings: UserSettings) -> float:
         return self if settings.imperial else self * 1.60934
 
 
 class Distance(float):
-    def convert(self, settings: UserSettings) -> "Distance":
+    def convert(self, settings: UserSettings) -> float:
         return self if settings.imperial else self * 1.60934
 
 
-@dataclass_json
 @dataclass
-class DetailedCondition:
+class DetailedCondition(DataClassJsonMixin):
     _temp: float = field(metadata=config(field_name="temp"))
     _feels_like: float = field(metadata=config(field_name="feels_like"))
     temp_min: float
@@ -62,9 +59,8 @@ class DetailedCondition:
         return Temperature(self._feels_like)
 
 
-@dataclass_json
 @dataclass
-class Wind:
+class Wind(DataClassJsonMixin):
     _speed: float = field(metadata=config(field_name="speed"))
     direction: int = field(metadata=config(field_name="deg"))
     _gust: Optional[float] = field(metadata=config(field_name="gust"))
@@ -75,40 +71,36 @@ class Wind:
 
     @property
     def gust(self) -> Optional[Speed]:
-        return Speed(self._gust)
+        # pyright makes me have the or 0 :SCWEEE:
+        return Speed(self._gust or 0) if self._gust is not None else None
 
 
-@dataclass_json
 @dataclass
-class Clouds:
+class Clouds(DataClassJsonMixin):
     all: float
 
 
-@dataclass_json
 @dataclass
-class Precipitation:
+class Precipitation(DataClassJsonMixin):
     one_hour: float = field(metadata=config(field_name="1h"), default=0)
     three_hour: float = field(metadata=config(field_name="3h"), default=0)
 
 
-@dataclass_json
 @dataclass
-class SysData:
+class SysData(DataClassJsonMixin):
     sunrise: int
     sunset: int
     country: Optional[str] = ""
 
 
-@dataclass_json
 @dataclass
-class Coordinates:
+class Coordinates(DataClassJsonMixin):
     lat: int
     lon: int
 
 
-@dataclass_json
 @dataclass
-class CurrentConditionsResponse:
+class CurrentConditionsResponse(DataClassJsonMixin):
     coord: Coordinates
     weather: List[Condition]
     main: DetailedCondition
@@ -124,18 +116,16 @@ class CurrentConditionsResponse:
     snow: Optional[Precipitation] = None
 
 
-@dataclass_json
 @dataclass
-class PollutionIndexResponseMain:
+class PollutionIndexResponseMain(DataClassJsonMixin):
     aqi: int
 
     def __str__(self) -> str:
         return ("Good", "Fair", "Moderate", "Poor", "Very Poor")[self.aqi]
 
 
-@dataclass_json
 @dataclass
-class PollutionIndexResponseComponents:
+class PollutionIndexResponseComponents(DataClassJsonMixin):
     co: float
     no: float
     no2: float
@@ -162,17 +152,15 @@ class PollutionIndexResponseComponents:
         }
 
 
-@dataclass_json
 @dataclass
-class PollutionIndexResponseData:
+class PollutionIndexResponseData(DataClassJsonMixin):
     dt: int
     main: PollutionIndexResponseMain
     components: PollutionIndexResponseComponents
 
 
-@dataclass_json
 @dataclass
-class CurrentPollutionIndexResponse:
+class CurrentPollutionIndexResponse(DataClassJsonMixin):
     coord: Coordinates
     list: List[PollutionIndexResponseData]
 
@@ -181,9 +169,8 @@ class CurrentPollutionIndexResponse:
         return self.list[0]
 
 
-@dataclass_json
 @dataclass
-class ForecastResponseData:
+class ForecastResponseData(DataClassJsonMixin):
     dt: int
     main: DetailedCondition
     clouds: Clouds
@@ -193,7 +180,6 @@ class ForecastResponseData:
     snow: Optional[Precipitation] = None
 
 
-@dataclass_json
 @dataclass
-class ForecastResponse(GenericResponse):
+class ForecastResponse(GenericResponse, DataClassJsonMixin):
     list: List[ForecastResponseData] = field(default_factory=lambda: [])

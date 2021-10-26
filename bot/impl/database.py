@@ -42,10 +42,10 @@ class DatabaseImpl:
     @classmethod
     def connect(cls):
         conn = connect_to_database(
-            password=os.getenv("DATABASE_PASSWORD"),
-            url=os.getenv("DATABASE_URL"),
-            user=os.getenv("DATABASE_USERNAME"),
-            database=os.getenv("DATABASE_NAME"),
+            password=os.getenv("DATABASE_PASSWORD", ""),
+            url=os.getenv("DATABASE_URL", ""),
+            user=os.getenv("DATABASE_USERNAME", ""),
+            database=os.getenv("DATABASE_NAME", ""),
         )
         return cls(conn)
 

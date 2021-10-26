@@ -37,7 +37,7 @@ hooks = tanjun.SlashHooks()
 
 
 @hooks.with_on_error
-async def on_error(ctx: tanjun.SlashContext, error: Exception) -> bool:
+async def on_error(ctx: tanjun.abc.SlashContext, error: Exception) -> bool:
     ctx.set_ephemeral_default(True)
     if isinstance(error, EphemerisRangeError):
         await ctx.respond(
@@ -81,7 +81,7 @@ async def seasons(
     "date", "The date to look up", converters=(parse_datetime,), default=None
 )
 @tanjun.as_slash_command("apod", "Astronomy Picture of the Day")
-async def date_data(
+async def apod(
     ctx: tanjun.SlashContext,
     date: datetime,
     _api: NasaAPI = tanjun.injected(type=NasaAPI),
@@ -140,11 +140,17 @@ async def constellation_orthographic(
     _bot: BotUtils = tanjun.injected(type=BotUtils),
 ):
     const = _dso.constellation(constellation)
+    if not const:
+        ctx.set_ephemeral_default(True)
+        await ctx.respond("No constellation found with that name/abbreviation")
+        return
     if type == "orthographic":
         desc = f"**{const.english_name}**\n"
         if const.named_stars:
+            # another annoying pyright thing
+            # TODO: maybe this can be fixed?
             desc += "**Named Stars**: " + ", ".join(
-                star.proper for star in const.named_stars
+                star.proper for star in const.named_stars  # type: ignore
             )
     else:
         desc = (

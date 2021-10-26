@@ -51,12 +51,12 @@ with open("data/catalog.txt") as stellarium_fp, open(
         stellarium_fp, open_ngc_fp, hyg_csv, constellations
     )
 
-bot = hikari.GatewayBot(token=os.getenv("TOKEN"))
+bot = hikari.GatewayBot(token=os.getenv("TOKEN", ""))
 client = (
     tanjun.Client.from_gateway_bot(
         bot,
-        declare_global_commands=int(os.getenv("GUILD"))
-        if os.getenv("GUILD")
+        declare_global_commands=int(os.getenv("GUILD", ""))
+        if os.getenv("GUILD", "")
         else True,
     )  # noqa E131
     .set_type_dependency(WeatherAPI, WeatherAPI())
@@ -73,7 +73,7 @@ client = (
 
 async def clear_commands():
     async with hikari.RESTApp().acquire(
-        os.getenv("TOKEN"), token_type="Bot"
+        os.getenv("TOKEN", ""), token_type="Bot"
     ) as rest:
         async with tanjun.Client(rest) as rest_client:
             await rest_client.clear_commands()

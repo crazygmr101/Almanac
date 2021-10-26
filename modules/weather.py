@@ -19,7 +19,7 @@ import tanjun
 from PIL import UnidentifiedImageError
 
 from bot.proto import DatabaseProto
-from libs.openweathermap import CityNotFoundError
+from libs.openweathermap import CityNotFoundError, Optional
 from module_services.weather import WeatherAPI
 
 component = tanjun.Component()
@@ -33,7 +33,9 @@ hooks = tanjun.SlashHooks()
 
 
 @hooks.with_on_error
-async def on_error(ctx: tanjun.SlashContext, error: Exception) -> bool:
+async def on_error(
+    ctx: tanjun.abc.SlashContext, error: Exception
+) -> Optional[bool]:
     ctx.set_ephemeral_default(True)
     if isinstance(error, CityNotFoundError):
         await ctx.respond("City not found")

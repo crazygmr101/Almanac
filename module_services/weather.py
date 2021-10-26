@@ -18,9 +18,9 @@ from module_services.geocoding import Geocoder
 class WeatherAPI(BotUtils, Geocoder):
     def __init__(self):
         super(WeatherAPI, self).__init__()
-        self.owm_api = OpenWeatherMapAPI(os.getenv("OWM"))
+        self.owm_api = OpenWeatherMapAPI(os.getenv("OWM", ""))
         self.weather_gov_api = WeatherGovAPI()
-        self.map_api = MapTilerAPI(os.getenv("MAPTILER"))
+        self.map_api = MapTilerAPI(os.getenv("MAPTILER", ""))
 
     async def current_pollution(self, city: str) -> hikari.Embed:
         lat, lon = await self.parse_location(city)
@@ -32,7 +32,7 @@ class WeatherAPI(BotUtils, Geocoder):
             description=f"**Pollution Index**: {pollution.data.main.aqi} - {pollution.data.main}\n\n"
             f"**Contaminant Levels**\n"
             + "\n".join(
-                f" - {pretty_name}: {round(value, 3)} µg/m³"
+                f" - {pretty_name}: {str(round(value, 3)) + ' µg/m³' if value else 'N/A'} "
                 for pretty_name, value in pollution.data.components.levels.items()
             ),
         )

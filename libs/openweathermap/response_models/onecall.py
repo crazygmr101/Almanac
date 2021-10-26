@@ -17,30 +17,27 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 from dataclasses import dataclass, field
 from typing import List, Union
 
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import dataclass_json, config, DataClassJsonMixin
 
 from .convertables import Temperature, Clouds, Wind, Speed, Precipitation
 
 
-@dataclass_json
 @dataclass
-class _Weather:
+class _Weather(DataClassJsonMixin):
     id: int
     main: str
     description: str
     icon: str
 
 
-@dataclass_json
 @dataclass
-class _Precipitation:
+class _Precipitation(DataClassJsonMixin):
     one_hour: float = field(metadata=config(field_name="1h"), default=0)
     three_hour: float = field(metadata=config(field_name="3h"), default=0)
 
 
-@dataclass_json
 @dataclass
-class _CurrentCondition:
+class _CurrentCondition(DataClassJsonMixin):
     dt: int
     sunrise: int
     sunset: int
@@ -55,7 +52,7 @@ class _CurrentCondition:
     wind_speed: float
     wind_deg: int
     _weather: List[_Weather] = field(metadata=config(field_name="weather"))
-    wind_gust: float = field(default=None)
+    wind_gust: float = field(default=None)  # type: ignore
     rain: _Precipitation = field(default=_Precipitation(0, 0))
     snow: _Precipitation = field(default=_Precipitation(0, 0))
 
@@ -64,9 +61,8 @@ class _CurrentCondition:
         return self._weather[0]
 
 
-@dataclass_json
 @dataclass
-class _HourlyCondition:
+class _HourlyCondition(DataClassJsonMixin):
     dt: int
     temp: float
     feels_like: float
@@ -82,16 +78,15 @@ class _HourlyCondition:
     _weather: List[_Weather] = field(metadata=config(field_name="weather"))
     rain: _Precipitation = field(default=_Precipitation(0, 0))
     snow: _Precipitation = field(default=_Precipitation(0, 0))
-    wind_gust: float = field(default=None)
+    wind_gust: float = field(default=None)  # type: ignore
 
     @property
     def weather(self) -> _Weather:
         return self._weather[0]
 
 
-@dataclass_json
 @dataclass
-class _DailyTemperature:
+class _DailyTemperature(DataClassJsonMixin):
     _day: float = field(metadata=config(field_name="day"))
 
     @property
@@ -129,18 +124,16 @@ class _DailyTemperature:
         return Temperature(self._morn)
 
 
-@dataclass_json
 @dataclass
-class _DailyFeelsLike:
+class _DailyFeelsLike(DataClassJsonMixin):
     day: float
     night: float
     eve: float
     morn: float
 
 
-@dataclass_json
 @dataclass
-class _DailyCondition:
+class _DailyCondition(DataClassJsonMixin):
     dt: int
     sunrise: int
     sunset: int
@@ -194,9 +187,8 @@ class _DailyCondition:
         return self._weather[0]
 
 
-@dataclass_json
 @dataclass
-class _WeatherAlert:
+class _WeatherAlert(DataClassJsonMixin):
     sender_name: str
     event: str
     start: int
@@ -205,9 +197,8 @@ class _WeatherAlert:
     tags: List[str]
 
 
-@dataclass_json()
 @dataclass
-class OneCallAPIResponse:
+class OneCallAPIResponse(DataClassJsonMixin):
     latitude: float = field(metadata=config(field_name="lat"))
     longitude: float = field(metadata=config(field_name="lon"))
     timezone: str
